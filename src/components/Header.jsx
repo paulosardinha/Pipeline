@@ -4,9 +4,9 @@ import { Plus, Filter, Users, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const Header = ({ onAddLead, onAddTask, filters, onFiltersChange, leads }) => {
-  const totalLeads = leads.length;
-  const activeLeads = leads.filter(lead => lead.status !== 'fechado').length;
+const Header = ({ onAddLead = () => {}, onAddTask = () => {}, filters = { status: 'all', priority: 'all', origin: 'all' }, onFiltersChange = () => {}, leads = [] }) => {
+  const totalLeads = leads?.length || 0;
+  const activeLeads = leads?.filter(lead => lead.status !== 'fechado')?.length || 0;
 
   return (
     <motion.header 
@@ -47,7 +47,11 @@ const Header = ({ onAddLead, onAddTask, filters, onFiltersChange, leads }) => {
             </div>
             
             <div className="flex flex-wrap gap-2">
-              <Select value={filters.status} onValueChange={(value) => onFiltersChange({...filters, status: value})}>
+              <Select value={filters?.status || 'all'} onValueChange={(value) => {
+                if (onFiltersChange) {
+                  onFiltersChange({...(filters || {}), status: value});
+                }
+              }}>
                 <SelectTrigger className="w-[140px] h-9">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -61,7 +65,11 @@ const Header = ({ onAddLead, onAddTask, filters, onFiltersChange, leads }) => {
                 </SelectContent>
               </Select>
 
-              <Select value={filters.priority} onValueChange={(value) => onFiltersChange({...filters, priority: value})}>
+              <Select value={filters?.priority || 'all'} onValueChange={(value) => {
+                if (onFiltersChange) {
+                  onFiltersChange({...(filters || {}), priority: value});
+                }
+              }}>
                 <SelectTrigger className="w-[140px] h-9">
                   <SelectValue placeholder="Prioridade" />
                 </SelectTrigger>
@@ -73,7 +81,11 @@ const Header = ({ onAddLead, onAddTask, filters, onFiltersChange, leads }) => {
                 </SelectContent>
               </Select>
 
-              <Select value={filters.origin} onValueChange={(value) => onFiltersChange({...filters, origin: value})}>
+              <Select value={filters?.origin || 'all'} onValueChange={(value) => {
+                if (onFiltersChange) {
+                  onFiltersChange({...(filters || {}), origin: value});
+                }
+              }}>
                 <SelectTrigger className="w-[140px] h-9">
                   <SelectValue placeholder="Origem" />
                 </SelectTrigger>
@@ -90,11 +102,11 @@ const Header = ({ onAddLead, onAddTask, filters, onFiltersChange, leads }) => {
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={onAddLead} className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+              <Button onClick={() => onAddLead && onAddLead()} className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Lead
               </Button>
-              <Button onClick={onAddTask} variant="outline" className="border-purple-200 hover:bg-purple-50">
+              <Button onClick={() => onAddTask && onAddTask()} variant="outline" className="border-purple-200 hover:bg-purple-50">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Tarefa
               </Button>

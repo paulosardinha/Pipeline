@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { DragDropContext } from '@hello-pangea/dnd';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -218,6 +218,16 @@ function App() {
     }
   };
 
+  const deleteTask = async (taskId) => {
+    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+    if (error) {
+      toast({ title: "Erro ao excluir tarefa", description: error.message, variant: "destructive" });
+    } else {
+      setTasks(tasks.filter(task => task.id !== taskId));
+      toast({ title: "Tarefa excluída!", description: "A tarefa foi removida com sucesso." });
+    }
+  };
+
   const addInteraction = async (leadId, interaction) => {
     const lead = leads.find(l => l.id === leadId);
     const updatedInteractions = [...(lead.interactions || []), { ...interaction, id: `int-${Date.now()}`, created_at: new Date().toISOString() }];
@@ -312,6 +322,9 @@ function App() {
           onAddTask={() => setIsTaskModalOpen(true)}
           onSignOut={() => supabase.auth.signOut()}
           user={session.user}
+          leads={leads}
+          filters={filters}
+          onFiltersChange={setFilters}
         />
         
         <main className="container mx-auto px-4 py-8">
@@ -327,21 +340,30 @@ function App() {
             transition={{ duration: 0.5, delay: 0.8 }}
             className="mt-8"
           >
-            <KanbanBoard
-              leads={filteredLeads}
-              onDragEnd={handleDragEnd}
-              onView={(lead) => {
-                setViewingLead(lead);
-                setIsLeadDetailModalOpen(true);
-              }}
-              onEdit={(lead) => {
-                setEditingLead(lead);
-                setIsLeadModalOpen(true);
-              }}
-              onDelete={deleteLead}
-              onToggleTask={toggleTask}
-              onOpenWhatsApp={openWhatsApp}
-            />
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <KanbanBoard
+                leads={filteredLeads}
+                tasks={tasks}
+                onViewLead={(lead) => {
+                  setViewingLead(lead);
+                  setIsLeadDetailModalOpen(true);
+                }}
+                onEditLead={(lead) => {
+                  setEditingLead(lead);
+                  setIsLeadModalOpen(true);
+                }}
+                onDeleteLead={deleteLead}
+                onAddTask={addTask}
+                onEditTask={(task) => {
+                  setEditingTask(task);
+                  setIsTaskModalOpen(true);
+                }}
+                onDeleteTask={deleteTask}
+                onToggleTask={toggleTask}
+                onAddInteraction={addInteraction}
+                onOpenWhatsApp={openWhatsApp}
+              />
+            </DragDropContext>
           </motion.div>
         </main>
 

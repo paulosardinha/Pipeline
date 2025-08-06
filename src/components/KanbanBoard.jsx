@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Droppable } from 'react-beautiful-dnd';
+import { Droppable } from '@hello-pangea/dnd';
 import KanbanColumn from '@/components/KanbanColumn';
 
 const KanbanBoard = ({ 
@@ -29,7 +29,7 @@ const KanbanBoard = ({
   };
 
   const getTasksByLead = (leadId) => {
-    return tasks.filter(task => task.leadId === leadId);
+    return tasks.filter(task => task.lead_id === leadId);
   };
 
   return (

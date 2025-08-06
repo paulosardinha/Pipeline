@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.2.1",
+    "@hello-pangea/dnd": "^18.0.1",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.3",
     "@radix-ui/react-checkbox": "^1.0.4",
@@ -28,7 +29,6 @@
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.285.0",
     "react": "^18.2.0",
-    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
     "react-helmet": "^6.1.0",
     "tailwind-merge": "^1.14.0",
