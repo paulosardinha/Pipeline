@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { subscriptionService } from '@/lib/subscriptionService';
 import Auth from '@/components/Auth';
+import ResetPassword from '@/components/ResetPassword';
 import Header from '@/components/Header';
 import Dashboard from '@/components/Dashboard';
 import KanbanBoard from '@/components/KanbanBoard';
@@ -34,6 +35,12 @@ function App() {
     origin: 'all'
   });
   const { toast } = useToast();
+
+  // Verificar se estamos na página de reset de senha
+  const isResetPasswordPage = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.has('access_token') && urlParams.has('refresh_token');
+  };
 
   // Verificar assinatura periodicamente
   useEffect(() => {
@@ -260,6 +267,11 @@ function App() {
     if (filters.origin !== 'all' && lead.origin !== filters.origin) return false;
     return true;
   });
+
+  // Se estamos na página de reset de senha, renderizar o componente ResetPassword
+  if (isResetPasswordPage()) {
+    return <ResetPassword />;
+  }
 
   if (authLoading) {
     return (

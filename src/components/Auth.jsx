@@ -6,17 +6,19 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, ArrowLeft, Mail } from 'lucide-react';
 import { subscriptionService } from '@/lib/subscriptionService';
 
 const Auth = () => {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [checkingSubscription, setCheckingSubscription] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   // Verificar assinatura quando email mudar
   useEffect(() => {
@@ -74,6 +76,30 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "E-mail obrigatório",
+        description: "Por favor, insira seu e-mail para redefinir a senha.",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await resetPassword(email);
+      if (!error) {
+        setResetEmailSent(true);
+      }
+    } catch (error) {
+      console.error('Erro ao enviar e-mail de reset:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderSubscriptionStatus = () => {
     if (!email || email.length < 5) return null;
 
@@ -116,13 +142,108 @@ const Auth = () => {
     }
   };
 
+  // Componente para "Esqueci minha senha"
+  const ForgotPasswordCard = () => (
+    <Card className="bg-white/5 border-white/20 text-white">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setShowForgotPassword(false);
+              setResetEmailSent(false);
+            }}
+            className="p-0 h-auto text-white/70 hover:text-white"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
+        </div>
+        <CardTitle className="mt-2">
+          {resetEmailSent ? 'E-mail enviado!' : 'Esqueci minha senha'}
+        </CardTitle>
+        <CardDescription className="text-white/70">
+          {resetEmailSent 
+            ? 'Verifique sua caixa de entrada e siga as instruções.'
+            : 'Digite seu e-mail para receber um link de redefinição de senha.'
+          }
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {resetEmailSent ? (
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
+              <Mail className="w-8 h-8 text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm text-white/80">
+                Enviamos um e-mail para <strong>{email}</strong> com instruções para redefinir sua senha.
+              </p>
+              <p className="text-xs text-white/60 mt-2">
+                Não recebeu o e-mail? Verifique sua pasta de spam ou tente novamente.
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setResetEmailSent(false);
+                setShowForgotPassword(false);
+              }}
+              className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white"
+            >
+              Voltar ao login
+            </Button>
+          </div>
+        ) : (
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="forgot-email">E-mail</Label>
+              <Input 
+                id="forgot-email" 
+                type="email" 
+                placeholder="seu@email.com" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                required 
+                className="bg-white/10 border-white/20 placeholder:text-white/50" 
+              />
+            </div>
+            {renderSubscriptionStatus()}
+            <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" disabled={loading || checkingSubscription}>
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Enviar e-mail de redefinição'}
+            </Button>
+          </form>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center p-4 relative bg-auth-background bg-cover bg-center">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div className="relative z-10 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="mb-4 inline-block">
+              <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="https://storage.googleapis.com/hostinger-horizons-assets-prod/d08cb82d-6f38-407f-afdd-2a89111d2bfa/e18ece8ef0a2cbe854d609b168a6f95c.png" />
+            </div>
+            <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline Alfa</h1>
+            <p className="text-brand-accent mt-2">A ferramenta definitiva para corretores de sucesso.</p>
+          </div>
+          <ForgotPasswordCard />
+        </div>
+        <img alt="Modern city skyline at dusk" className="absolute inset-0 w-full h-full object-cover -z-10" src="https://images.unsplash.com/photo-1679379886920-25f131284c2e" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative bg-auth-background bg-cover bg-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="mb-4 inline-block">
-            <img  alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="https://storage.googleapis.com/hostinger-horizons-assets-prod/d08cb82d-6f38-407f-afdd-2a89111d2bfa/e18ece8ef0a2cbe854d609b168a6f95c.png" />
+            <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="https://storage.googleapis.com/hostinger-horizons-assets-prod/d08cb82d-6f38-407f-afdd-2a89111d2bfa/e18ece8ef0a2cbe854d609b168a6f95c.png" />
           </div>
           <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline Alfa</h1>
           <p className="text-brand-accent mt-2">A ferramenta definitiva para corretores de sucesso.</p>
@@ -142,7 +263,7 @@ const Auth = () => {
               <CardContent>
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email" >E-mail</Label>
+                    <Label htmlFor="signin-email">E-mail</Label>
                     <Input 
                       id="signin-email" 
                       type="email" 
@@ -169,6 +290,16 @@ const Auth = () => {
                   <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" disabled={loading || checkingSubscription}>
                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Entrar'}
                   </Button>
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-white/70 hover:text-white text-sm"
+                    >
+                      Esqueci minha senha
+                    </Button>
+                  </div>
                 </form>
               </CardContent>
             </Card>
@@ -215,7 +346,7 @@ const Auth = () => {
           </TabsContent>
         </Tabs>
       </div>
-      <img  alt="Modern city skyline at dusk" className="absolute inset-0 w-full h-full object-cover -z-10" src="https://images.unsplash.com/photo-1679379886920-25f131284c2e" />
+      <img alt="Modern city skyline at dusk" className="absolute inset-0 w-full h-full object-cover -z-10" src="https://images.unsplash.com/photo-1679379886920-25f131284c2e" />
     </div>
   );
 };

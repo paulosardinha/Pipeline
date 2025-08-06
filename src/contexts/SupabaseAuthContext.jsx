@@ -122,6 +122,40 @@ export const AuthProvider = ({ children }) => {
     return { error };
   }, [toast]);
 
+  const resetPassword = useCallback(async (email) => {
+    // Verificar se o email tem assinatura ativa antes de permitir reset
+    const subscriptionCheck = await subscriptionService.checkSubscriptionStatus(email);
+    
+    if (!subscriptionCheck.hasActiveSubscription) {
+      const error = new Error('Email não possui assinatura ativa. Verifique se você completou a compra na Hotmart.');
+      toast({
+        variant: "destructive",
+        title: "Reset de senha não permitido",
+        description: error.message,
+      });
+      return { error };
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar e-mail",
+        description: error.message || "Não foi possível enviar o e-mail de reset de senha.",
+      });
+    } else {
+      toast({
+        title: "E-mail enviado com sucesso!",
+        description: "Verifique sua caixa de entrada e siga as instruções para redefinir sua senha.",
+      });
+    }
+
+    return { error };
+  }, [toast]);
+
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
 
@@ -143,8 +177,9 @@ export const AuthProvider = ({ children }) => {
     subscriptionStatus,
     signUp,
     signIn,
+    resetPassword,
     signOut,
-  }), [user, session, loading, subscriptionStatus, signUp, signIn, signOut]);
+  }), [user, session, loading, subscriptionStatus, signUp, signIn, resetPassword, signOut]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
