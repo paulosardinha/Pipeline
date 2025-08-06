@@ -11,10 +11,9 @@ const TaskModal = ({ isOpen, onClose, onSave, task, leads, selectedLeadId }) => 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    dueDate: '',
-    leadId: selectedLeadId || '',
-    priority: 'media',
-    type: 'call'
+    due_date: '',
+    lead_id: selectedLeadId || '',
+    priority: 'media'
   });
   const { toast } = useToast();
 
@@ -23,19 +22,17 @@ const TaskModal = ({ isOpen, onClose, onSave, task, leads, selectedLeadId }) => 
       setFormData({
         title: task.title || '',
         description: task.description || '',
-        dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
-        leadId: task.leadId || '',
-        priority: task.priority || 'media',
-        type: task.type || 'call'
+        due_date: task.due_date ? task.due_date.split('T')[0] : '',
+        lead_id: task.lead_id || '',
+        priority: task.priority || 'media'
       });
     } else {
       setFormData({
         title: '',
         description: '',
-        dueDate: '',
-        leadId: selectedLeadId || '',
-        priority: 'media',
-        type: 'call'
+        due_date: '',
+        lead_id: selectedLeadId || '',
+        priority: 'media'
       });
     }
   }, [task, selectedLeadId, isOpen]);
@@ -43,7 +40,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task, leads, selectedLeadId }) => 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!formData.title.trim() || !formData.leadId || !formData.dueDate) {
+    if (!formData.title.trim() || !formData.lead_id || !formData.due_date) {
       toast({
         title: "Erro",
         description: "Título, lead e data são obrigatórios",
@@ -54,7 +51,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task, leads, selectedLeadId }) => 
 
     const taskData = {
       ...formData,
-      dueDate: new Date(formData.dueDate).toISOString()
+      due_date: new Date(formData.due_date).toISOString()
     };
 
     onSave(taskData);
@@ -98,14 +95,19 @@ const TaskModal = ({ isOpen, onClose, onSave, task, leads, selectedLeadId }) => 
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="dueDate">Data de Vencimento *</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                required
-              />
+              <Label htmlFor="lead_id">Lead *</Label>
+              <Select value={formData.lead_id} onValueChange={(value) => setFormData({ ...formData, lead_id: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um lead" />
+                </SelectTrigger>
+                <SelectContent>
+                  {leads.map((lead) => (
+                    <SelectItem key={lead.id} value={lead.id}>
+                      {lead.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="priority">Prioridade</Label>
@@ -122,38 +124,15 @@ const TaskModal = ({ isOpen, onClose, onSave, task, leads, selectedLeadId }) => 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="leadId">Lead *</Label>
-              <Select value={formData.leadId} onValueChange={(value) => setFormData({ ...formData, leadId: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um lead" />
-                </SelectTrigger>
-                <SelectContent>
-                  {leads.map((lead) => (
-                    <SelectItem key={lead.id} value={lead.id}>
-                      {lead.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="type">Tipo</Label>
-              <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="call">Ligação</SelectItem>
-                  <SelectItem value="meeting">Reunião</SelectItem>
-                  <SelectItem value="visit">Visita</SelectItem>
-                  <SelectItem value="follow-up">Follow-up</SelectItem>
-                  <SelectItem value="email">E-mail</SelectItem>
-                  <SelectItem value="other">Outro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="due_date">Data de Vencimento *</Label>
+            <Input
+              id="due_date"
+              type="date"
+              value={formData.due_date}
+              onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+              required
+            />
           </div>
 
           <div className="flex gap-2 pt-4">

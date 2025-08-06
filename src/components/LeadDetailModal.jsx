@@ -89,8 +89,8 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks }) => {
               <DetailItem icon={<Phone className="w-4 h-4 text-gray-600" />} label="Telefone" value={lead.phone} />
               <DetailItem icon={<Mail className="w-4 h-4 text-gray-600" />} label="E-mail" value={lead.email} />
               <DetailItem icon={<MapPin className="w-4 h-4 text-gray-600" />} label="Bairro de Interesse" value={lead.neighborhood} />
-              <DetailItem icon={<Building className="w-4 h-4 text-gray-600" />} label="Tipo de Imóvel" value={lead.propertyType} />
-              <DetailItem icon={<DollarSign className="w-4 h-4 text-gray-600" />} label="Valor Potencial" value={formatCurrency(lead.potentialValue)} />
+              <DetailItem icon={<Building className="w-4 h-4 text-gray-600" />} label="Tipo de Imóvel" value={lead.property_type} />
+              <DetailItem icon={<DollarSign className="w-4 h-4 text-gray-600" />} label="Valor Potencial" value={formatCurrency(lead.potential_value)} />
               <DetailItem icon={<BedDouble className="w-4 h-4 text-gray-600" />} label="Dormitórios" value={lead.bedrooms} />
               <DetailItem icon={<Tag className="w-4 h-4 text-gray-600" />} label="Origem" value={lead.origin} />
               {lead.observations && (
@@ -104,7 +104,7 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks }) => {
                 <h3 className="text-lg font-semibold mb-3">Tarefas em Aberto</h3>
                 <div className="space-y-3">
                   {openTasks.length > 0 ? openTasks.map(task => {
-                    const isOverdue = new Date(task.dueDate) < new Date();
+                    const isOverdue = new Date(task.due_date) < new Date();
                     return (
                       <div key={task.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <div className="flex justify-between items-start">
@@ -113,7 +113,7 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks }) => {
                         </div>
                         <p className="text-sm text-gray-600 mt-1">{task.description}</p>
                         <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                          <span>Vence em: {new Date(task.dueDate).toLocaleDateString('pt-BR')}</span>
+                          <span>Vence em: {new Date(task.due_date).toLocaleDateString('pt-BR')}</span>
                           <Badge variant="outline" className={getPriorityColor(task.priority)}>{getPriorityLabel(task.priority)}</Badge>
                         </div>
                       </div>

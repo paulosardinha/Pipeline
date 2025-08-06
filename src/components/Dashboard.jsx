@@ -14,8 +14,8 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
     proposalSent: leads.filter(lead => lead.status === 'proposta-enviada').length,
     closed: leads.filter(lead => lead.status === 'fechado').length,
     conversionRate: leads.length > 0 ? ((leads.filter(lead => lead.status === 'fechado').length / leads.length) * 100).toFixed(1) : 0,
-    todayTasks: tasks.filter(task => new Date(task.dueDate).toDateString() === today).length,
-    overdueTasks: tasks.filter(task => new Date(task.dueDate) < new Date() && !task.completed).length,
+    todayTasks: tasks.filter(task => new Date(task.due_date).toDateString() === today).length,
+    overdueTasks: tasks.filter(task => new Date(task.due_date) < new Date() && !task.completed).length,
     completedTasks: tasks.filter(task => task.completed).length
   };
 
@@ -25,10 +25,10 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
 
   const urgentTasks = tasks
     .filter(task => !task.completed && (
-      new Date(task.dueDate).toDateString() === today ||
-      new Date(task.dueDate) < new Date()
+      new Date(task.due_date).toDateString() === today ||
+      new Date(task.due_date) < new Date()
     ))
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
     .slice(0, 5);
 
   const StatCard = ({ icon: Icon, title, value, subtitle, color, delay = 0 }) => (
@@ -112,11 +112,11 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
                 <div key={lead.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
                   <div>
                     <p className="font-medium text-gray-900">{lead.name}</p>
-                    <p className="text-sm text-gray-600">{lead.neighborhood} • {lead.propertyType}</p>
+                    <p className="text-sm text-gray-600">{lead.neighborhood} • {lead.property_type}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-red-600">Alta Prioridade</p>
-                    <p className="text-xs text-gray-500">R$ {lead.potentialValue?.toLocaleString()}</p>
+                    <p className="text-xs text-gray-500">R$ {lead.potential_value?.toLocaleString()}</p>
                   </div>
                 </div>
               ))
@@ -134,8 +134,8 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
           <div className="space-y-3">
             {urgentTasks.length > 0 ? (
               urgentTasks.map((task) => {
-                const isOverdue = new Date(task.dueDate) < new Date();
-                const lead = leads.find(l => l.id === task.leadId);
+                const isOverdue = new Date(task.due_date) < new Date();
+                const lead = leads.find(l => l.id === task.lead_id);
                 
                 return (
                   <div key={task.id} className={`flex items-center justify-between p-3 rounded-lg border-l-4 ${
@@ -155,7 +155,7 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
                         {isOverdue ? 'Atrasada' : 'Hoje'}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {new Date(task.dueDate).toLocaleDateString()}
+                        {new Date(task.due_date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

@@ -65,7 +65,7 @@ const LeadCard = ({
 
   const nextOpenTask = tasks
     .filter(task => !task.completed)
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))[0];
+    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))[0];
 
   return (
     <Draggable draggableId={lead.id} index={index}>
@@ -122,11 +122,11 @@ const LeadCard = ({
                         <div className="flex-1 cursor-pointer" onClick={() => onView(lead)}>
                             <span className="text-gray-700 font-medium truncate">{nextOpenTask.title}</span>
                             <div className="flex items-center gap-1 text-gray-500">
-                                {new Date(nextOpenTask.dueDate) < new Date() && (
+                                {new Date(nextOpenTask.due_date) < new Date() && (
                                     <AlertCircle className="w-3 h-3 text-red-500 flex-shrink-0" />
                                 )}
                                 <span>
-                                    Vence em: {new Date(nextOpenTask.dueDate).toLocaleDateString('pt-BR')}
+                                    Vence em: {new Date(nextOpenTask.due_date).toLocaleDateString('pt-BR')}
                                 </span>
                             </div>
                         </div>

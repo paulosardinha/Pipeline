@@ -13,8 +13,8 @@ const LeadModal = ({ isOpen, onClose, onSave, lead }) => {
     phone: '',
     email: '',
     neighborhood: '',
-    propertyType: '',
-    potentialValue: '',
+    property_type: '',
+    potential_value: '',
     bedrooms: '',
     observations: '',
     origin: '',
@@ -38,8 +38,8 @@ const LeadModal = ({ isOpen, onClose, onSave, lead }) => {
         phone: lead.phone || '',
         email: lead.email || '',
         neighborhood: lead.neighborhood || '',
-        propertyType: lead.propertyType || '',
-        potentialValue: formatCurrencyForDisplay(lead.potentialValue),
+        property_type: lead.property_type || '',
+        potential_value: formatCurrencyForDisplay(lead.potential_value),
         bedrooms: lead.bedrooms || '',
         observations: lead.observations || '',
         origin: lead.origin || '',
@@ -52,8 +52,8 @@ const LeadModal = ({ isOpen, onClose, onSave, lead }) => {
         phone: '',
         email: '',
         neighborhood: '',
-        propertyType: '',
-        potentialValue: '',
+        property_type: '',
+        potential_value: '',
         bedrooms: '',
         observations: '',
         origin: '',
@@ -75,10 +75,10 @@ const LeadModal = ({ isOpen, onClose, onSave, lead }) => {
       return;
     }
 
-    const valueString = String(formData.potentialValue);
+    const valueString = String(formData.potential_value);
     const leadData = {
       ...formData,
-      potentialValue: formData.potentialValue ? parseFloat(valueString.replace(/[^\d,]/g, '').replace(',', '.')) : 0,
+      potential_value: formData.potential_value ? parseFloat(valueString.replace(/[^\d,]/g, '').replace(',', '.')) : 0,
       bedrooms: formData.bedrooms ? parseInt(formData.bedrooms, 10) : null,
     };
 
@@ -100,7 +100,7 @@ const LeadModal = ({ isOpen, onClose, onSave, lead }) => {
 
   const handleCurrencyChange = (e) => {
     const formatted = formatCurrencyOnInput(e.target.value);
-    setFormData({ ...formData, potentialValue: formatted });
+    setFormData({ ...formData, potential_value: formatted });
   };
 
   return (
@@ -127,7 +127,7 @@ const LeadModal = ({ isOpen, onClose, onSave, lead }) => {
               <Input
                 id="phone"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
                 placeholder="(11) 99999-9999"
                 required
               />
@@ -156,8 +156,8 @@ const LeadModal = ({ isOpen, onClose, onSave, lead }) => {
               />
             </div>
             <div>
-              <Label htmlFor="propertyType">Tipo de Imóvel</Label>
-              <Select value={formData.propertyType} onValueChange={(value) => setFormData({ ...formData, propertyType: value })}>
+              <Label htmlFor="property_type">Tipo de Imóvel</Label>
+              <Select value={formData.property_type} onValueChange={(value) => setFormData({ ...formData, property_type: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -174,10 +174,10 @@ const LeadModal = ({ isOpen, onClose, onSave, lead }) => {
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="potentialValue">Valor Potencial</Label>
+              <Label htmlFor="potential_value">Valor Potencial</Label>
               <Input
-                id="potentialValue"
-                value={formData.potentialValue}
+                id="potential_value"
+                value={formData.potential_value}
                 onChange={handleCurrencyChange}
                 placeholder="R$ 0,00"
               />
