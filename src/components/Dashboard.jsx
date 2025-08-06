@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Users, TrendingUp, Clock, CheckCircle, AlertTriangle, Calendar } from 'lucide-react';
+import SubscriptionStatus from './SubscriptionStatus';
 
 const Dashboard = ({ leads, tasks, onToggleTask }) => {
   const today = new Date().toDateString();
@@ -52,17 +53,26 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
 
   return (
     <div className="space-y-6">
+      {/* Status da Assinatura */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0 }}
+      >
+        <SubscriptionStatus />
+      </motion.div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard icon={Users} title="Total de Leads" value={stats.totalLeads} color="border-l-blue-500" delay={0} />
-        <StatCard icon={TrendingUp} title="Taxa de Conversão" value={`${stats.conversionRate}%`} subtitle={`${stats.closed} fechados`} color="border-l-green-500" delay={0.1} />
-        <StatCard icon={Clock} title="Tarefas Hoje" value={stats.todayTasks} subtitle={`${stats.overdueTasks} atrasadas`} color="border-l-yellow-500" delay={0.2} />
-        <StatCard icon={CheckCircle} title="Tarefas Concluídas" value={stats.completedTasks} color="border-l-purple-500" delay={0.3} />
+        <StatCard icon={Users} title="Total de Leads" value={stats.totalLeads} color="border-l-blue-500" delay={0.1} />
+        <StatCard icon={TrendingUp} title="Taxa de Conversão" value={`${stats.conversionRate}%`} subtitle={`${stats.closed} fechados`} color="border-l-green-500" delay={0.2} />
+        <StatCard icon={Clock} title="Tarefas Hoje" value={stats.todayTasks} subtitle={`${stats.overdueTasks} atrasadas`} color="border-l-yellow-500" delay={0.3} />
+        <StatCard icon={CheckCircle} title="Tarefas Concluídas" value={stats.completedTasks} color="border-l-purple-500" delay={0.4} />
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
         className="bg-white rounded-xl p-6 shadow-lg"
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Visão Geral do Pipeline</h3>
@@ -91,7 +101,7 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }} className="bg-white rounded-xl p-6 shadow-lg">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }} className="bg-white rounded-xl p-6 shadow-lg">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="w-5 h-5 text-red-500" />
             <h3 className="text-lg font-semibold text-gray-900">Leads Prioritários</h3>
@@ -116,7 +126,7 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }} className="bg-white rounded-xl p-6 shadow-lg">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.7 }} className="bg-white rounded-xl p-6 shadow-lg">
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="w-5 h-5 text-blue-500" />
             <h3 className="text-lg font-semibold text-gray-900">Tarefas Urgentes</h3>

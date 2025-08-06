@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
+import { subscriptionService } from '@/lib/subscriptionService';
 import Auth from '@/components/Auth';
 import Header from '@/components/Header';
 import Dashboard from '@/components/Dashboard';
@@ -13,10 +14,10 @@ import KanbanBoard from '@/components/KanbanBoard';
 import LeadModal from '@/components/LeadModal';
 import TaskModal from '@/components/TaskModal';
 import LeadDetailModal from '@/components/LeadDetailModal';
-import { Loader2 } from 'lucide-react';
+import { Loader2, XCircle } from 'lucide-react';
 
 function App() {
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, subscriptionStatus } = useAuth();
   const [leads, setLeads] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -33,6 +34,38 @@ function App() {
     origin: 'all'
   });
   const { toast } = useToast();
+
+  // Verificar assinatura periodicamente
+  useEffect(() => {
+    if (!session?.user?.email) return;
+
+    const checkSubscription = async () => {
+      try {
+        const status = await subscriptionService.checkSubscriptionStatus(session.user.email);
+        if (!status.hasActiveSubscription) {
+          toast({
+            title: "Assinatura Expirada",
+            description: "Sua assinatura não está mais ativa. Renove na Hotmart para continuar usando o sistema.",
+            variant: "destructive",
+          });
+          // Redirecionar para logout após 5 segundos
+          setTimeout(() => {
+            supabase.auth.signOut();
+          }, 5000);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar assinatura:', error);
+      }
+    };
+
+    // Verificar a cada 5 minutos
+    const interval = setInterval(checkSubscription, 5 * 60 * 1000);
+    
+    // Verificar imediatamente
+    checkSubscription();
+
+    return () => clearInterval(interval);
+  }, [session?.user?.email, toast]);
 
   const fetchData = useCallback(async () => {
     if (!session) return;
@@ -230,78 +263,125 @@ function App() {
     return <Auth />;
   }
 
+  // Verificar se a assinatura está ativa
+  if (subscriptionStatus && !subscriptionStatus.hasActiveSubscription) {
+    return (
+      <div className="min-h-screen main-background flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl p-8 shadow-lg max-w-md text-center">
+          <div className="mb-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Assinatura Expirada</h2>
+            <p className="text-gray-600 mb-6">
+              {subscriptionStatus.message || 'Sua assinatura não está mais ativa. Renove na Hotmart para continuar usando o sistema.'}
+            </p>
+          </div>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-500">
+              Para reativar sua assinatura:
+            </p>
+            <ol className="text-sm text-gray-600 text-left space-y-2">
+              <li>1. Acesse sua área de membros na Hotmart</li>
+              <li>2. Localize o produto Pipeline Alfa</li>
+              <li>3. Renove sua assinatura</li>
+              <li>4. Aguarde alguns minutos e tente fazer login novamente</li>
+            </ol>
+          </div>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="mt-6 w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Sair do Sistema
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Helmet>
-        <title>Pipeline Alfa - Sistema de Vendas para Corretores</title>
-        <meta name="description" content="Sistema completo de pipeline de vendas para corretores de imóveis com gestão de leads, tarefas e dashboard de performance." />
+        <title>Pipeline Alfa - Dashboard</title>
+        <meta name="description" content="Gerencie seus leads e vendas com eficiência" />
       </Helmet>
       
       <div className="min-h-screen main-background">
         <Header 
-          onAddLead={() => { setEditingLead(null); setIsLeadModalOpen(true); }}
-          onAddTask={() => { setEditingTask(null); setIsTaskModalOpen(true); }}
-          filters={filters}
-          onFiltersChange={setFilters}
-          leads={leads}
+          onAddLead={() => setIsLeadModalOpen(true)}
+          onAddTask={() => setIsTaskModalOpen(true)}
+          onSignOut={() => supabase.auth.signOut()}
+          user={session.user}
         />
         
-        <main className="container mx-auto px-4 py-6 space-y-6">
-          {loadingData ? (
-            <div className="flex items-center justify-center min-h-[600px]">
-              <Loader2 className="h-12 w-12 animate-spin text-brand-secondary" />
-            </div>
-          ) : (
-            <>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                <Dashboard leads={leads} tasks={tasks} onToggleTask={toggleTask} />
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-                <DragDropContext onDragEnd={handleDragEnd}>
-                  <KanbanBoard 
-                    leads={filteredLeads}
-                    tasks={tasks}
-                    onViewLead={(lead) => { setViewingLead(lead); setIsLeadDetailModalOpen(true); }}
-                    onEditLead={(lead) => { setEditingLead(lead); setIsLeadModalOpen(true); }}
-                    onDeleteLead={deleteLead}
-                    onAddTask={(leadId) => { setSelectedLeadId(leadId); setIsTaskModalOpen(true); }}
-                    onToggleTask={toggleTask}
-                    onAddInteraction={addInteraction}
-                    onOpenWhatsApp={openWhatsApp}
-                  />
-                </DragDropContext>
-              </motion.div>
-            </>
-          )}
+        <main className="container mx-auto px-4 py-8">
+          <Dashboard 
+            leads={leads} 
+            tasks={tasks} 
+            onToggleTask={toggleTask}
+          />
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+            className="mt-8"
+          >
+            <KanbanBoard
+              leads={filteredLeads}
+              onDragEnd={handleDragEnd}
+              onView={(lead) => {
+                setViewingLead(lead);
+                setIsLeadDetailModalOpen(true);
+              }}
+              onEdit={(lead) => {
+                setEditingLead(lead);
+                setIsLeadModalOpen(true);
+              }}
+              onDelete={deleteLead}
+              onToggleTask={toggleTask}
+              onOpenWhatsApp={openWhatsApp}
+            />
+          </motion.div>
         </main>
 
         <LeadModal
           isOpen={isLeadModalOpen}
-          onClose={() => { setIsLeadModalOpen(false); setEditingLead(null); }}
+          onClose={() => {
+            setIsLeadModalOpen(false);
+            setEditingLead(null);
+          }}
           onSave={editingLead ? (data) => updateLead(editingLead.id, data) : addLead}
           lead={editingLead}
         />
 
         <TaskModal
           isOpen={isTaskModalOpen}
-          onClose={() => { setIsTaskModalOpen(false); setEditingTask(null); setSelectedLeadId(null); }}
+          onClose={() => {
+            setIsTaskModalOpen(false);
+            setEditingTask(null);
+          }}
           onSave={editingTask ? (data) => updateTask(editingTask.id, data) : addTask}
           task={editingTask}
           leads={leads}
-          selectedLeadId={selectedLeadId}
         />
 
         <LeadDetailModal
           isOpen={isLeadDetailModalOpen}
-          onClose={() => setIsLeadDetailModalOpen(false)}
+          onClose={() => {
+            setIsLeadDetailModalOpen(false);
+            setViewingLead(null);
+          }}
           lead={viewingLead}
-          tasks={tasks.filter(t => t.lead_id === viewingLead?.id)}
           onAddInteraction={addInteraction}
-          onToggleTask={toggleTask}
+          onEdit={(lead) => {
+            setEditingLead(lead);
+            setIsLeadModalOpen(true);
+            setIsLeadDetailModalOpen(false);
+          }}
+          onDelete={deleteLead}
+          onOpenWhatsApp={openWhatsApp}
         />
-
-        <Toaster />
       </div>
     </>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { subscriptionService } from '@/lib/subscriptionService';
 
 const Auth = () => {
   const { signIn, signUp } = useAuth();
@@ -14,6 +15,36 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [checkingSubscription, setCheckingSubscription] = useState(false);
+
+  // Verificar assinatura quando email mudar
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (!email || email.length < 5) {
+        setSubscriptionStatus(null);
+        return;
+      }
+
+      setCheckingSubscription(true);
+      try {
+        const status = await subscriptionService.checkSubscriptionStatus(email);
+        setSubscriptionStatus(status);
+      } catch (error) {
+        console.error('Erro ao verificar assinatura:', error);
+        setSubscriptionStatus({
+          hasActiveSubscription: false,
+          message: 'Erro ao verificar assinatura'
+        });
+      } finally {
+        setCheckingSubscription(false);
+      }
+    };
+
+    // Debounce para não fazer muitas requisições
+    const timeoutId = setTimeout(checkSubscription, 500);
+    return () => clearTimeout(timeoutId);
+  }, [email]);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -21,16 +52,9 @@ const Auth = () => {
     try {
       const { error } = await signIn(email, password);
       if (error) throw error;
-      toast({
-        title: 'Login realizado com sucesso!',
-        description: 'Bem-vindo de volta!',
-      });
     } catch (error) {
-      toast({
-        title: 'Erro no Login',
-        description: error.message,
-        variant: 'destructive',
-      });
+      // O erro já é tratado no contexto
+      console.error('Erro no login:', error);
     } finally {
       setLoading(false);
     }
@@ -42,18 +66,53 @@ const Auth = () => {
     try {
       const { error } = await signUp(email, password);
       if (error) throw error;
-      toast({
-        title: 'Cadastro realizado com sucesso!',
-        description: 'Verifique seu e-mail para confirmar sua conta.',
-      });
     } catch (error) {
-      toast({
-        title: 'Erro no Cadastro',
-        description: error.message,
-        variant: 'destructive',
-      });
+      // O erro já é tratado no contexto
+      console.error('Erro no cadastro:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const renderSubscriptionStatus = () => {
+    if (!email || email.length < 5) return null;
+
+    if (checkingSubscription) {
+      return (
+        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+          <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+          <div>
+            <p className="text-sm font-medium text-blue-800">Verificando assinatura...</p>
+            <p className="text-xs text-blue-600">Aguarde um momento</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!subscriptionStatus) return null;
+
+    if (subscriptionStatus.hasActiveSubscription) {
+      return (
+        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg mb-4">
+          <CheckCircle className="w-5 h-5 text-green-600" />
+          <div>
+            <p className="text-sm font-medium text-green-800">Assinatura ativa</p>
+            <p className="text-xs text-green-600">Você pode prosseguir com o cadastro/login</p>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
+          <AlertCircle className="w-5 h-5 text-red-600" />
+          <div>
+            <p className="text-sm font-medium text-red-800">Assinatura não encontrada</p>
+            <p className="text-xs text-red-600">
+              {subscriptionStatus.message || 'Verifique se você completou a compra na Hotmart'}
+            </p>
+          </div>
+        </div>
+      );
     }
   };
 
@@ -84,13 +143,30 @@ const Auth = () => {
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email" >E-mail</Label>
-                    <Input id="signin-email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-white/10 border-white/20 placeholder:text-white/50" />
+                    <Input 
+                      id="signin-email" 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      required 
+                      className="bg-white/10 border-white/20 placeholder:text-white/50" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Senha</Label>
-                    <Input id="signin-password" type="password" placeholder="Sua senha" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-white/10 border-white/20 placeholder:text-white/50" />
+                    <Input 
+                      id="signin-password" 
+                      type="password" 
+                      placeholder="Sua senha" 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      required 
+                      className="bg-white/10 border-white/20 placeholder:text-white/50" 
+                    />
                   </div>
-                  <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" disabled={loading}>
+                  {renderSubscriptionStatus()}
+                  <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" disabled={loading || checkingSubscription}>
                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Entrar'}
                   </Button>
                 </form>
@@ -107,13 +183,30 @@ const Auth = () => {
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">E-mail</Label>
-                    <Input id="signup-email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-white/10 border-white/20 placeholder:text-white/50" />
+                    <Input 
+                      id="signup-email" 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      required 
+                      className="bg-white/10 border-white/20 placeholder:text-white/50" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Senha</Label>
-                    <Input id="signup-password" type="password" placeholder="Crie uma senha forte" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-white/10 border-white/20 placeholder:text-white/50" />
+                    <Input 
+                      id="signup-password" 
+                      type="password" 
+                      placeholder="Crie uma senha forte" 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      required 
+                      className="bg-white/10 border-white/20 placeholder:text-white/50" 
+                    />
                   </div>
-                  <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" disabled={loading}>
+                  {renderSubscriptionStatus()}
+                  <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" disabled={loading || checkingSubscription}>
                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Cadastrar'}
                   </Button>
                 </form>
