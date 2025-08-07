@@ -40,65 +40,67 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => 
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filtros:</span>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <Select value={filters?.status || 'all'} onValueChange={(value) => {
-                if (onFiltersChange) {
-                  onFiltersChange({...(filters || {}), status: value});
-                }
-              }}>
-                <SelectTrigger className="w-[140px] h-9">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos Status</SelectItem>
-                  <SelectItem value="novo-lead">Novo Lead</SelectItem>
-                  <SelectItem value="em-contato">Em Contato</SelectItem>
-                  <SelectItem value="visita-marcada">Visita Marcada</SelectItem>
-                  <SelectItem value="proposta-enviada">Proposta Enviada</SelectItem>
-                  <SelectItem value="fechado">Fechado</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">Filtros:</span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Select value={filters?.status || 'all'} onValueChange={(value) => {
+                  if (onFiltersChange) {
+                    onFiltersChange({...(filters || {}), status: value});
+                  }
+                }}>
+                  <SelectTrigger className="w-[120px] h-9">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos Status</SelectItem>
+                    <SelectItem value="novo-lead">Novo Lead</SelectItem>
+                    <SelectItem value="em-contato">Em Contato</SelectItem>
+                    <SelectItem value="visita-marcada">Visita Marcada</SelectItem>
+                    <SelectItem value="proposta-enviada">Proposta Enviada</SelectItem>
+                    <SelectItem value="fechado">Fechado</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={filters?.priority || 'all'} onValueChange={(value) => {
-                if (onFiltersChange) {
-                  onFiltersChange({...(filters || {}), priority: value});
-                }
-              }}>
-                <SelectTrigger className="w-[140px] h-9">
-                  <SelectValue placeholder="Prioridade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Prioridade</SelectItem>
-                  <SelectItem value="alta">Alta</SelectItem>
-                  <SelectItem value="media">Média</SelectItem>
-                  <SelectItem value="baixa">Baixa</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={filters?.priority || 'all'} onValueChange={(value) => {
+                  if (onFiltersChange) {
+                    onFiltersChange({...(filters || {}), priority: value});
+                  }
+                }}>
+                  <SelectTrigger className="w-[120px] h-9">
+                    <SelectValue placeholder="Prioridade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Prioridade</SelectItem>
+                    <SelectItem value="alta">Alta</SelectItem>
+                    <SelectItem value="media">Média</SelectItem>
+                    <SelectItem value="baixa">Baixa</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={filters?.origin || 'all'} onValueChange={(value) => {
-                if (onFiltersChange) {
-                  onFiltersChange({...(filters || {}), origin: value});
-                }
-              }}>
-                <SelectTrigger className="w-[140px] h-9">
-                  <SelectValue placeholder="Origem" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas Origens</SelectItem>
-                  <SelectItem value="site">Site</SelectItem>
-                  <SelectItem value="facebook">Facebook</SelectItem>
-                  <SelectItem value="instagram">Instagram</SelectItem>
-                  <SelectItem value="indicacao">Indicação</SelectItem>
-                  <SelectItem value="telefone">Telefone</SelectItem>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={filters?.origin || 'all'} onValueChange={(value) => {
+                  if (onFiltersChange) {
+                    onFiltersChange({...(filters || {}), origin: value});
+                  }
+                }}>
+                  <SelectTrigger className="w-[120px] h-9">
+                    <SelectValue placeholder="Origem" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas Origens</SelectItem>
+                    <SelectItem value="site">Site</SelectItem>
+                    <SelectItem value="facebook">Facebook</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                    <SelectItem value="indicacao">Indicação</SelectItem>
+                    <SelectItem value="telefone">Telefone</SelectItem>
+                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
@@ -115,9 +117,9 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => 
               
               {user && (
                 <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded-lg">
                     <User className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-xs font-medium text-gray-700 max-w-[120px] truncate">
                       {user.email || 'Usuário'}
                     </span>
                   </div>
