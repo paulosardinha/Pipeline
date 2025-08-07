@@ -74,7 +74,7 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => 
                   <SelectValue placeholder="Prioridade" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="all">Prioridade</SelectItem>
                   <SelectItem value="alta">Alta</SelectItem>
                   <SelectItem value="media">Média</SelectItem>
                   <SelectItem value="baixa">Baixa</SelectItem>
