@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Users, TrendingUp, Clock, CheckCircle, AlertTriangle, Calendar } from 'lucide-react';
-import SubscriptionStatus from './SubscriptionStatus';
+
 
 const Dashboard = ({ leads, tasks, onToggleTask }) => {
   const today = new Date().toDateString();
@@ -53,14 +53,7 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
 
   return (
     <div className="space-y-6">
-      {/* Status da Assinatura */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0 }}
-      >
-        <SubscriptionStatus />
-      </motion.div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard icon={Users} title="Total de Leads" value={stats.totalLeads} color="border-l-blue-500" delay={0.1} />

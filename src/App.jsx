@@ -501,6 +501,7 @@ function App() {
           }}
           lead={viewingLead}
           tasks={tasks}
+          onToggleTask={toggleTask}
           onAddInteraction={addInteraction}
           onEdit={(lead) => {
             setEditingLead(lead);

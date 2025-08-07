@@ -1,11 +1,36 @@
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MessageCircle, Calendar, AlertCircle, Mail, MapPin, DollarSign, Building, Tag, BedDouble, FileText, Users } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Phone, MessageCircle, Calendar, AlertCircle, Mail, MapPin, DollarSign, Building, Tag, BedDouble, FileText, Users, Plus } from 'lucide-react';
 
-const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [] }) => {
-  if (!lead) return null;
+const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [], onToggleTask, onAddInteraction, onOpenWhatsApp }) => {
+  const [isInteractionModalOpen, setIsInteractionModalOpen] = useState(false);
+  const [interactionText, setInteractionText] = useState('');
+  const [interactionType, setInteractionType] = useState('call');
+  const [interactionDate, setInteractionDate] = useState(new Date().toISOString().slice(0, 10));
+
+  const handleAddInteraction = () => {
+    if (!interactionText.trim()) {
+      alert("Digite o conteúdo da interação");
+      return;
+    }
+
+    onAddInteraction(lead.id, {
+      type: interactionType,
+      content: interactionText,
+      date: interactionDate,
+    });
+
+    setInteractionText('');
+    setInteractionDate(new Date().toISOString().slice(0, 10));
+    setIsInteractionModalOpen(false);
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Data não disponível';
@@ -57,6 +82,8 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [] }) => {
       default: return <MessageCircle className="w-5 h-5 text-gray-500" />;
     }
   };
+
+  if (!lead) return null;
 
   const openTasks = (tasks || []).filter(task => !task.completed);
   const sortedInteractions = [...(lead.interactions || [])].sort((a, b) => {
@@ -117,14 +144,36 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [] }) => {
                     const isOverdue = new Date(task.due_date) < new Date();
                     return (
                       <div key={task.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex justify-between items-start">
-                          <p className="font-medium text-gray-800">{task.title}</p>
-                          {isOverdue && <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />}
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-                        <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                          <span>Vence em: {new Date(task.due_date).toLocaleDateString('pt-BR')}</span>
-                          <Badge variant="outline" className={getPriorityColor(task.priority)}>{getPriorityLabel(task.priority)}</Badge>
+                        <div className="flex items-start gap-3">
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id={`task-${task.id}`}
+                              checked={task.completed}
+                              onCheckedChange={() => onToggleTask && onToggleTask(task.id)}
+                              className="mt-0.5"
+                            />
+                            <label 
+                              htmlFor={`task-${task.id}`} 
+                              className="text-xs text-gray-600 cursor-pointer hover:text-gray-800 transition-colors"
+                            >
+                              {task.completed ? 'Tarefa concluída' : 'Concluir tarefa'}
+                            </label>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <p className={`font-medium text-gray-800 ${task.completed ? 'line-through' : ''}`}>
+                                {task.title}
+                              </p>
+                              {isOverdue && <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />}
+                            </div>
+                            {task.description && (
+                              <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                            )}
+                            <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+                              <span>Vence em: {new Date(task.due_date).toLocaleDateString('pt-BR')}</span>
+                              <Badge variant="outline" className={getPriorityColor(task.priority)}>{getPriorityLabel(task.priority)}</Badge>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -156,6 +205,92 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [] }) => {
             </div>
           </div>
         </ScrollArea>
+
+        {/* Botões de Ação */}
+        <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onOpenWhatsApp(lead.phone)}
+            className="flex-1"
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            WhatsApp
+          </Button>
+          <Dialog open={isInteractionModalOpen} onOpenChange={(open) => {
+            setIsInteractionModalOpen(open);
+            if (!open) {
+              setInteractionText('');
+              setInteractionDate(new Date().toISOString().slice(0, 10));
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => {
+                  setIsInteractionModalOpen(true);
+                  setInteractionDate(new Date().toISOString().slice(0, 10));
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Interação
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nova Interação - {lead.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Tipo de Interação</Label>
+                  <select
+                    value={interactionType}
+                    onChange={(e) => setInteractionType(e.target.value)}
+                    className="w-full mt-1 p-2 border rounded-md"
+                  >
+                    <option value="call">Ligação</option>
+                    <option value="message">Mensagem</option>
+                    <option value="visit">Visita</option>
+                    <option value="meeting">Reunião</option>
+                  </select>
+                </div>
+                <div>
+                  <Label>Data da Interação</Label>
+                  <Input
+                    type="date"
+                    value={interactionDate}
+                    onChange={(e) => setInteractionDate(e.target.value)}
+                    className="w-full mt-1 p-2 border rounded-md"
+                  />
+                </div>
+                <div>
+                  <Label>Descrição</Label>
+                  <Textarea
+                    value={interactionText}
+                    onChange={(e) => setInteractionText(e.target.value)}
+                    placeholder="Descreva o que aconteceu nesta interação..."
+                    className="mt-1"
+                    rows={3}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleAddInteraction} className="flex-1">
+                    Salvar Interação
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsInteractionModalOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </DialogContent>
     </Dialog>
   );

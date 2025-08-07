@@ -6,11 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, AlertCircle, CheckCircle, ArrowLeft, Mail } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { subscriptionService } from '@/lib/subscriptionService';
+import ForgotPasswordCard from './ForgotPasswordCard';
 
 const Auth = () => {
-  const { signIn, signUp, resetPassword } = useAuth();
+
+  
+  const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,34 +21,40 @@ const Auth = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [checkingSubscription, setCheckingSubscription] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetEmailSent, setResetEmailSent] = useState(false);
-  const [resetCooldown, setResetCooldown] = useState(0);
-  const [lastResetAttempt, setLastResetAttempt] = useState(null);
+  
+
 
   // Verificar assinatura quando email mudar
   const checkSubscription = useCallback(async (emailToCheck) => {
+
+    
     if (!emailToCheck || emailToCheck.length < 5) {
+
       setSubscriptionStatus(null);
       return;
     }
 
     // Evitar verificações desnecessárias se já temos um status para este email
     if (subscriptionStatus && subscriptionStatus.email === emailToCheck) {
+
       return;
     }
 
     // Verificar se o email é válido antes de fazer a requisição
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailToCheck)) {
+
       return;
     }
+
 
     setCheckingSubscription(true);
     try {
       const status = await subscriptionService.checkSubscriptionStatus(emailToCheck);
+
       setSubscriptionStatus({ ...status, email: emailToCheck }); // Adicionar email ao status
     } catch (error) {
-      console.error('Erro ao verificar assinatura:', error);
+      console.error('❌ Erro ao verificar assinatura:', error);
       setSubscriptionStatus({
         hasActiveSubscription: false,
         message: 'Erro ao verificar assinatura',
@@ -57,28 +66,17 @@ const Auth = () => {
   }, [subscriptionStatus]);
 
   useEffect(() => {
+
     // Debounce para não fazer muitas requisições - aumentado para 1.5 segundos
     const timeoutId = setTimeout(() => {
+
       checkSubscription(email);
     }, 1500);
-    return () => clearTimeout(timeoutId);
-  }, [email, checkSubscription]);
+    return () => {
 
-  // Gerenciar cooldown do reset de senha
-  useEffect(() => {
-    if (resetCooldown > 0) {
-      const timer = setInterval(() => {
-        setResetCooldown(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [resetCooldown]);
+      clearTimeout(timeoutId);
+    };
+  }, [email, checkSubscription]);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -108,45 +106,7 @@ const Auth = () => {
     }
   };
 
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
-    if (!email) {
-      toast({
-        variant: "destructive",
-        title: "E-mail obrigatório",
-        description: "Por favor, insira seu e-mail para redefinir a senha.",
-      });
-      return;
-    }
 
-    // Verificar rate limiting
-    const now = Date.now();
-    if (lastResetAttempt && (now - lastResetAttempt) < 60000) { // 1 minuto
-      const remainingTime = Math.ceil((60000 - (now - lastResetAttempt)) / 1000);
-      toast({
-        variant: "destructive",
-        title: "Aguarde um momento",
-        description: `Você pode tentar novamente em ${remainingTime} segundos.`,
-      });
-      return;
-    }
-
-    setLoading(true);
-    setLastResetAttempt(now);
-    
-    try {
-      const { error } = await resetPassword(email);
-      if (!error) {
-        setResetEmailSent(true);
-        // Iniciar cooldown de 5 minutos
-        setResetCooldown(300);
-      }
-    } catch (error) {
-      console.error('Erro ao enviar e-mail de reset:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const renderSubscriptionStatus = useCallback(() => {
     if (!email || email.length < 5) return null;
@@ -190,113 +150,10 @@ const Auth = () => {
     }
   }, [email, checkingSubscription, subscriptionStatus]);
 
-  // Componente para "Esqueci minha senha"
-  const ForgotPasswordCard = () => (
-    <Card className="bg-white/5 border-white/20 text-white">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setShowForgotPassword(false);
-              setResetEmailSent(false);
-            }}
-            className="p-0 h-auto text-white/70 hover:text-white"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
-        </div>
-        <CardTitle className="mt-2">
-          {resetEmailSent ? 'E-mail enviado!' : 'Esqueci minha senha'}
-        </CardTitle>
-        <CardDescription className="text-white/70">
-          {resetEmailSent 
-            ? 'Verifique sua caixa de entrada e siga as instruções.'
-            : 'Digite seu e-mail para receber um link de redefinição de senha.'
-          }
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {resetEmailSent ? (
-          <div className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
-              <Mail className="w-8 h-8 text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm text-white/80">
-                Enviamos um e-mail para <strong>{email}</strong> com instruções para redefinir sua senha.
-              </p>
-              <p className="text-xs text-white/60 mt-2">
-                Não recebeu o e-mail? Verifique sua pasta de spam ou tente novamente.
-              </p>
-            </div>
-            <Button
-              onClick={() => {
-                setResetEmailSent(false);
-                setShowForgotPassword(false);
-              }}
-              className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white"
-            >
-              Voltar ao login
-            </Button>
-          </div>
-        ) : (
-          <form onSubmit={handleForgotPassword} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="forgot-email">E-mail</Label>
-              <Input 
-                id="forgot-email" 
-                type="email" 
-                placeholder="seu@email.com" 
-                value={email} 
-                onChange={(e) => {
-                  const newEmail = e.target.value;
-                  setEmail(newEmail);
-                }} 
-                required 
-                className="bg-white/10 border-white/20 placeholder:text-white/50" 
-              />
-            </div>
-            {renderSubscriptionStatus()}
-            {resetCooldown > 0 && (
-              <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
-                <AlertCircle className="w-5 h-5 text-yellow-600" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-800">Aguarde para tentar novamente</p>
-                  <p className="text-xs text-yellow-600">
-                    Para evitar spam, você pode solicitar um novo e-mail em {Math.floor(resetCooldown / 60)}:{(resetCooldown % 60).toString().padStart(2, '0')}
-                  </p>
-                </div>
-              </div>
-            )}
-            <Button 
-              type="submit" 
-              className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" 
-              disabled={loading || checkingSubscription || resetCooldown > 0 || !subscriptionStatus?.hasActiveSubscription || !email || email.length < 5}
-            >
-              {loading ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
-              ) : resetCooldown > 0 ? (
-                `Aguarde ${Math.floor(resetCooldown / 60)}:${(resetCooldown % 60).toString().padStart(2, '0')}`
-              ) : !email || email.length < 5 ? (
-                'Digite um e-mail válido'
-              ) : checkingSubscription ? (
-                'Verificando assinatura...'
-              ) : !subscriptionStatus?.hasActiveSubscription ? (
-                subscriptionStatus ? 'Assinatura não encontrada' : 'Aguardando verificação...'
-              ) : (
-                'Enviar e-mail de redefinição'
-              )}
-            </Button>
-          </form>
-        )}
-      </CardContent>
-    </Card>
-  );
+
 
   if (showForgotPassword) {
+
     return (
       <div className="min-h-screen w-full flex items-center justify-center p-4 relative bg-auth-background bg-cover bg-center">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
@@ -308,7 +165,10 @@ const Auth = () => {
             <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline Alfa</h1>
             <p className="text-brand-accent mt-2">A ferramenta definitiva para corretores de sucesso.</p>
           </div>
-          <ForgotPasswordCard />
+          <ForgotPasswordCard 
+            initialEmail={email}
+            onBack={() => setShowForgotPassword(false)}
+          />
         </div>
         <img alt="Modern city skyline at dusk" className="absolute inset-0 w-full h-full object-cover -z-10" src="https://images.unsplash.com/photo-1679379886920-25f131284c2e" />
       </div>
