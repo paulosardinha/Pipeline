@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,32 +23,46 @@ const Auth = () => {
   const [lastResetAttempt, setLastResetAttempt] = useState(null);
 
   // Verificar assinatura quando email mudar
+  const checkSubscription = useCallback(async (emailToCheck) => {
+    if (!emailToCheck || emailToCheck.length < 5) {
+      setSubscriptionStatus(null);
+      return;
+    }
+
+    // Evitar verificações desnecessárias se já temos um status para este email
+    if (subscriptionStatus && subscriptionStatus.email === emailToCheck) {
+      return;
+    }
+
+    // Verificar se o email é válido antes de fazer a requisição
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailToCheck)) {
+      return;
+    }
+
+    setCheckingSubscription(true);
+    try {
+      const status = await subscriptionService.checkSubscriptionStatus(emailToCheck);
+      setSubscriptionStatus({ ...status, email: emailToCheck }); // Adicionar email ao status
+    } catch (error) {
+      console.error('Erro ao verificar assinatura:', error);
+      setSubscriptionStatus({
+        hasActiveSubscription: false,
+        message: 'Erro ao verificar assinatura',
+        email: emailToCheck
+      });
+    } finally {
+      setCheckingSubscription(false);
+    }
+  }, [subscriptionStatus]);
+
   useEffect(() => {
-    const checkSubscription = async () => {
-      if (!email || email.length < 5) {
-        setSubscriptionStatus(null);
-        return;
-      }
-
-      setCheckingSubscription(true);
-      try {
-        const status = await subscriptionService.checkSubscriptionStatus(email);
-        setSubscriptionStatus(status);
-      } catch (error) {
-        console.error('Erro ao verificar assinatura:', error);
-        setSubscriptionStatus({
-          hasActiveSubscription: false,
-          message: 'Erro ao verificar assinatura'
-        });
-      } finally {
-        setCheckingSubscription(false);
-      }
-    };
-
-    // Debounce para não fazer muitas requisições
-    const timeoutId = setTimeout(checkSubscription, 500);
+    // Debounce para não fazer muitas requisições - aumentado para 1.5 segundos
+    const timeoutId = setTimeout(() => {
+      checkSubscription(email);
+    }, 1500);
     return () => clearTimeout(timeoutId);
-  }, [email]);
+  }, [email, checkSubscription]);
 
   // Gerenciar cooldown do reset de senha
   useEffect(() => {
@@ -134,7 +148,7 @@ const Auth = () => {
     }
   };
 
-  const renderSubscriptionStatus = () => {
+  const renderSubscriptionStatus = useCallback(() => {
     if (!email || email.length < 5) return null;
 
     if (checkingSubscription) {
@@ -149,7 +163,7 @@ const Auth = () => {
       );
     }
 
-    if (!subscriptionStatus) return null;
+    if (!subscriptionStatus || subscriptionStatus.email !== email) return null;
 
     if (subscriptionStatus.hasActiveSubscription) {
       return (
@@ -174,7 +188,7 @@ const Auth = () => {
         </div>
       );
     }
-  };
+  }, [email, checkingSubscription, subscriptionStatus]);
 
   // Componente para "Esqueci minha senha"
   const ForgotPasswordCard = () => (
@@ -237,7 +251,10 @@ const Auth = () => {
                 type="email" 
                 placeholder="seu@email.com" 
                 value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
+                onChange={(e) => {
+                  const newEmail = e.target.value;
+                  setEmail(newEmail);
+                }} 
                 required 
                 className="bg-white/10 border-white/20 placeholder:text-white/50" 
               />
@@ -257,12 +274,14 @@ const Auth = () => {
             <Button 
               type="submit" 
               className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" 
-              disabled={loading || checkingSubscription || resetCooldown > 0}
+              disabled={loading || checkingSubscription || resetCooldown > 0 || !subscriptionStatus?.hasActiveSubscription}
             >
               {loading ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
               ) : resetCooldown > 0 ? (
                 `Aguarde ${Math.floor(resetCooldown / 60)}:${(resetCooldown % 60).toString().padStart(2, '0')}`
+              ) : !subscriptionStatus?.hasActiveSubscription ? (
+                'Aguardando verificação de assinatura...'
               ) : (
                 'Enviar e-mail de redefinição'
               )}
@@ -324,7 +343,10 @@ const Auth = () => {
                       type="email" 
                       placeholder="seu@email.com" 
                       value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
+                      onChange={(e) => {
+                        const newEmail = e.target.value;
+                        setEmail(newEmail);
+                      }} 
                       required 
                       className="bg-white/10 border-white/20 placeholder:text-white/50" 
                     />
@@ -374,7 +396,10 @@ const Auth = () => {
                       type="email" 
                       placeholder="seu@email.com" 
                       value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
+                      onChange={(e) => {
+                        const newEmail = e.target.value;
+                        setEmail(newEmail);
+                      }} 
                       required 
                       className="bg-white/10 border-white/20 placeholder:text-white/50" 
                     />
