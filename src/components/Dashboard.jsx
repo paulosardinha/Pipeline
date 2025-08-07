@@ -100,7 +100,7 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }} className="bg-white rounded-xl p-6 shadow-lg">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -163,6 +163,79 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
               })
             ) : (
               <p className="text-gray-500 text-center py-4">Nenhuma tarefa urgente</p>
+            )}
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.8 }} className="bg-white rounded-xl p-6 shadow-lg">
+          <div className="flex items-center gap-2 mb-4">
+            <CheckCircle className="w-5 h-5 text-purple-500" />
+            <h3 className="text-lg font-semibold text-gray-900">Todas as Tarefas</h3>
+          </div>
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {tasks.length > 0 ? (
+              tasks
+                .sort((a, b) => {
+                  // Primeiro, tarefas não completadas
+                  if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                  }
+                  // Depois, por data de vencimento
+                  return new Date(a.due_date) - new Date(b.due_date);
+                })
+                .slice(0, 10)
+                .map((task) => {
+                  const isOverdue = new Date(task.due_date) < new Date() && !task.completed;
+                  const isToday = new Date(task.due_date).toDateString() === new Date().toDateString() && !task.completed;
+                  const lead = leads.find(l => l.id === task.lead_id);
+                  
+                  return (
+                    <div key={task.id} className={`flex items-center justify-between p-3 rounded-lg border-l-4 ${
+                      task.completed ? 'bg-green-50 border-green-500' :
+                      isOverdue ? 'bg-red-50 border-red-500' : 
+                      isToday ? 'bg-yellow-50 border-yellow-500' : 
+                      'bg-gray-50 border-gray-300'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => onToggleTask(task.id)} className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          task.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400'
+                        }`}>
+                          {task.completed && <CheckCircle className="w-3 h-3" />}
+                        </button>
+                        <div>
+                          <p className={`font-medium text-gray-900 text-sm ${
+                            task.completed ? 'line-through' : ''
+                          }`}>{task.title}</p>
+                          <p className="text-xs text-gray-600">{lead?.name || 'Lead não encontrado'}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-xs font-medium ${
+                          task.completed ? 'text-green-600' :
+                          isOverdue ? 'text-red-600' : 
+                          isToday ? 'text-yellow-600' : 
+                          'text-gray-500'
+                        }`}>
+                          {task.completed ? 'Concluída' :
+                           isOverdue ? 'Atrasada' : 
+                           isToday ? 'Hoje' : 
+                           new Date(task.due_date).toLocaleDateString('pt-BR')}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {task.priority === 'alta' ? 'Alta' : 
+                           task.priority === 'media' ? 'Média' : 'Baixa'}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+            ) : (
+              <p className="text-gray-500 text-center py-4">Nenhuma tarefa encontrada</p>
+            )}
+            {tasks.length > 10 && (
+              <p className="text-xs text-gray-400 text-center pt-2">
+                Mostrando 10 de {tasks.length} tarefas
+              </p>
             )}
           </div>
         </motion.div>

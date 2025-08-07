@@ -2,19 +2,24 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MessageCircle, Calendar, AlertCircle, Mail, MapPin, DollarSign, Building, Tag, BedDouble, FileText } from 'lucide-react';
+import { Phone, MessageCircle, Calendar, AlertCircle, Mail, MapPin, DollarSign, Building, Tag, BedDouble, FileText, Users } from 'lucide-react';
 
-const LeadDetailModal = ({ isOpen, onClose, lead, tasks }) => {
+const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [] }) => {
   if (!lead) return null;
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'Data não disponível';
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Data inválida';
+    }
   };
 
   const formatCurrency = (value) => {
@@ -48,12 +53,17 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks }) => {
       case 'call': return <Phone className="w-5 h-5 text-blue-500" />;
       case 'message': return <MessageCircle className="w-5 h-5 text-green-500" />;
       case 'visit': return <Calendar className="w-5 h-5 text-purple-500" />;
+      case 'meeting': return <Users className="w-5 h-5 text-orange-500" />;
       default: return <MessageCircle className="w-5 h-5 text-gray-500" />;
     }
   };
 
-  const openTasks = tasks.filter(task => !task.completed);
-  const sortedInteractions = [...(lead.interactions || [])].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const openTasks = (tasks || []).filter(task => !task.completed);
+  const sortedInteractions = [...(lead.interactions || [])].sort((a, b) => {
+    const dateA = a.created_at || a.createdAt || new Date();
+    const dateB = b.created_at || b.createdAt || new Date();
+    return new Date(dateB) - new Date(dateA);
+  });
 
   const DetailItem = ({ icon, label, value, isBlock = false }) => (
     <div className={`flex items-start gap-3 ${isBlock ? 'flex-col items-start' : ''}`}>
@@ -73,7 +83,7 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks }) => {
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">{lead.name}</DialogTitle>
           <DialogDescription>
-            Lead criado em {new Date(lead.createdAt).toLocaleDateString('pt-BR')}
+            Lead criado em {lead.created_at ? new Date(lead.created_at).toLocaleDateString('pt-BR') : (lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível')}
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-2 my-2">
@@ -135,7 +145,7 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks }) => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-800">{interaction.content}</p>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(interaction.createdAt)}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(interaction.created_at || interaction.createdAt || new Date())}</p>
                       </div>
                     </div>
                   )) : (

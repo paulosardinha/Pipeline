@@ -19,41 +19,19 @@ const ResetPassword = ({ tokens }) => {
   const [isValidating, setIsValidating] = useState(true);
 
   useEffect(() => {
-    console.log('=== RESET PASSWORD COMPONENT ===');
-    console.log('ResetPassword - Tokens recebidos:', tokens);
-    console.log('URL atual:', window.location.href);
-    console.log('Pathname:', window.location.pathname);
-    console.log('Search:', window.location.search);
-    console.log('Hash:', window.location.hash);
-    
-    // Logs mais visíveis para debug
-    console.warn('🔄 RESET PASSWORD: Componente iniciado');
-    console.warn('🎫 Tokens:', tokens);
-    console.warn('🌐 URL completa:', window.location.href);
-    
     setIsValidating(true);
     
     if (!tokens) {
-      console.log('Nenhum token recebido, verificando sessão atual do Supabase');
-      
       // Tentar obter a sessão atual do Supabase (pode ter sido processada automaticamente)
       const checkCurrentSession = async () => {
         try {
-          console.log('Verificando sessão atual...');
           const { data: { session }, error } = await supabase.auth.getSession();
           
-          console.log('Resultado da verificação de sessão:', { session, error });
-          
           if (session && session.user) {
-            console.log('Sessão ativa encontrada:', session);
-            console.log('User:', session.user);
-            console.log('Access token:', session.access_token);
             setIsValidLink(true);
             setIsValidating(false);
             return;
           }
-          
-          console.log('Nenhuma sessão ativa encontrada');
           
           // Verificar se há tokens na URL que podem ter sido processados automaticamente
           const urlParams = new URLSearchParams(window.location.search);
@@ -63,19 +41,15 @@ const ResetPassword = ({ tokens }) => {
           if (!urlParams.has('token') && !hashParams.has('token') && 
               !urlParams.has('access_token') && !hashParams.has('access_token')) {
             
-            console.warn('⏳ Aguardando validação do link...');
-            
             // Aguardar um pouco mais para dar tempo do Supabase processar automaticamente
             setTimeout(async () => {
               // Verificar novamente a sessão após o delay
               const { data: { session: retrySession }, error: retryError } = await supabase.auth.getSession();
               
               if (retrySession && retrySession.user) {
-                console.log('Sessão encontrada após retry:', retrySession);
                 setIsValidLink(true);
                 setIsValidating(false);
               } else {
-                console.warn('❌ Link considerado inválido após verificação completa');
                 toast({
                   variant: "destructive",
                   title: "Link inválido",
@@ -87,15 +61,12 @@ const ResetPassword = ({ tokens }) => {
             }, 3000); // Reduzido de 5 para 3 segundos
           } else {
             // Se há tokens na URL, aguardar um pouco mais para processamento
-            console.log('Tokens detectados na URL, aguardando processamento...');
             setTimeout(async () => {
               const { data: { session: retrySession } } = await supabase.auth.getSession();
               if (retrySession && retrySession.user) {
-                console.log('Sessão processada com sucesso:', retrySession);
                 setIsValidLink(true);
                 setIsValidating(false);
               } else {
-                console.warn('❌ Falha ao processar tokens da URL');
                 toast({
                   variant: "destructive",
                   title: "Link inválido",
@@ -106,7 +77,6 @@ const ResetPassword = ({ tokens }) => {
             }, 2000);
           }
         } catch (error) {
-          console.error('Erro ao verificar sessão:', error);
           setIsValidating(false);
           toast({
             variant: "destructive",
@@ -117,87 +87,77 @@ const ResetPassword = ({ tokens }) => {
       };
       
       checkCurrentSession();
-      return;
-    }
-    
-    // Se temos tokens de acesso diretos, usar eles
-    if (tokens.access_token && tokens.refresh_token) {
-      console.log('Processando tokens de acesso diretos');
-      const setSession = async () => {
-        try {
-          const { error } = await supabase.auth.setSession({
-            access_token: tokens.access_token,
-            refresh_token: tokens.refresh_token,
-          });
+    } else {
+      // Se temos tokens de acesso diretos, usar eles
+      if (tokens.access_token && tokens.refresh_token) {
+        const setSession = async () => {
+          try {
+            const { error } = await supabase.auth.setSession({
+              access_token: tokens.access_token,
+              refresh_token: tokens.refresh_token,
+            });
 
-          if (error) {
-            console.error('Erro ao definir sessão:', error);
+            if (error) {
+              toast({
+                variant: "destructive",
+                title: "Erro ao validar link",
+                description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
+              });
+              setIsValidating(false);
+            } else {
+              setIsValidLink(true);
+              setIsValidating(false);
+            }
+          } catch (error) {
+            setIsValidating(false);
             toast({
               variant: "destructive",
               title: "Erro ao validar link",
-              description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
+              description: "Ocorreu um erro ao processar o link de redefinição. Por favor, tente novamente.",
             });
-            setIsValidating(false);
-          } else {
-            console.log('Sessão definida com sucesso');
-            setIsValidLink(true);
-            setIsValidating(false);
           }
-        } catch (error) {
-          console.error('Erro ao processar sessão:', error);
-          setIsValidating(false);
-          toast({
-            variant: "destructive",
-            title: "Erro ao validar link",
-            description: "Ocorreu um erro ao processar o link de redefinição. Por favor, tente novamente.",
-          });
-        }
-      };
-      setSession();
-    }
-    // Se temos um token de recovery, verificar com o Supabase
-    else if (tokens.token && tokens.type === 'recovery') {
-      console.log('Processando token de recovery');
-      const verifyRecovery = async () => {
-        try {
-          const { data, error } = await supabase.auth.verifyOtp({
-            token_hash: tokens.token,
-            type: 'recovery'
-          });
-          
-          if (error) {
-            console.error('Erro ao verificar recovery token:', error);
+        };
+        setSession();
+      }
+      // Se temos um token de recovery, verificar com o Supabase
+      else if (tokens.token && tokens.type === 'recovery') {
+        const verifyRecovery = async () => {
+          try {
+            const { data, error } = await supabase.auth.verifyOtp({
+              token_hash: tokens.token,
+              type: 'recovery'
+            });
+            
+            if (error) {
+              toast({
+                variant: "destructive",
+                title: "Link inválido",
+                description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
+              });
+              setIsValidating(false);
+            } else {
+              setIsValidLink(true);
+              setIsValidating(false);
+            }
+          } catch (error) {
+            setIsValidating(false);
             toast({
               variant: "destructive",
-              title: "Link inválido",
-              description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
+              title: "Erro ao validar link",
+              description: "Ocorreu um erro ao validar o link de redefinição. Por favor, tente novamente.",
             });
-            setIsValidating(false);
-          } else {
-            console.log('Recovery token válido:', data);
-            setIsValidLink(true);
-            setIsValidating(false);
           }
-        } catch (error) {
-          console.error('Erro na verificação:', error);
-          setIsValidating(false);
-          toast({
-            variant: "destructive",
-            title: "Erro ao validar link",
-            description: "Ocorreu um erro ao validar o link de redefinição. Por favor, tente novamente.",
-          });
-        }
-      };
-      verifyRecovery();
-    }
-    else {
-      console.log('Tokens inválidos recebidos:', tokens);
-      setIsValidating(false);
-      toast({
-        variant: "destructive",
-        title: "Link inválido",
-        description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
-      });
+        };
+        verifyRecovery();
+      }
+      else {
+        toast({
+          variant: "destructive",
+          title: "Link inválido",
+          description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
+        });
+        setIsValidating(false);
+      }
     }
   }, [tokens, toast]);
 

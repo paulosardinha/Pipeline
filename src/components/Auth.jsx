@@ -274,14 +274,18 @@ const Auth = () => {
             <Button 
               type="submit" 
               className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" 
-              disabled={loading || checkingSubscription || resetCooldown > 0 || !subscriptionStatus?.hasActiveSubscription}
+              disabled={loading || checkingSubscription || resetCooldown > 0 || !subscriptionStatus?.hasActiveSubscription || !email || email.length < 5}
             >
               {loading ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
               ) : resetCooldown > 0 ? (
                 `Aguarde ${Math.floor(resetCooldown / 60)}:${(resetCooldown % 60).toString().padStart(2, '0')}`
+              ) : !email || email.length < 5 ? (
+                'Digite um e-mail válido'
+              ) : checkingSubscription ? (
+                'Verificando assinatura...'
               ) : !subscriptionStatus?.hasActiveSubscription ? (
-                'Aguardando verificação de assinatura...'
+                subscriptionStatus ? 'Assinatura não encontrada' : 'Aguardando verificação...'
               ) : (
                 'Enviar e-mail de redefinição'
               )}

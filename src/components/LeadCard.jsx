@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -33,6 +34,7 @@ const LeadCard = ({
   const [isInteractionModalOpen, setIsInteractionModalOpen] = useState(false);
   const [interactionText, setInteractionText] = useState('');
   const [interactionType, setInteractionType] = useState('call');
+  const [interactionDate, setInteractionDate] = useState(new Date().toISOString().slice(0, 10));
   const { toast } = useToast();
 
   const handleAddInteraction = () => {
@@ -48,9 +50,11 @@ const LeadCard = ({
     onAddInteraction(lead.id, {
       type: interactionType,
       content: interactionText,
+      date: interactionDate,
     });
 
     setInteractionText('');
+    setInteractionDate(new Date().toISOString().slice(0, 10));
     setIsInteractionModalOpen(false);
   };
   
@@ -150,13 +154,23 @@ const LeadCard = ({
                 <MessageCircle className="w-3 h-3 mr-1.5" />
                 WhatsApp
               </Button>
-              <Dialog open={isInteractionModalOpen} onOpenChange={setIsInteractionModalOpen}>
+              <Dialog open={isInteractionModalOpen} onOpenChange={(open) => {
+                setIsInteractionModalOpen(open);
+                if (!open) {
+                  setInteractionText('');
+                  setInteractionDate(new Date().toISOString().slice(0, 10));
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button 
                     size="sm" 
                     variant="outline" 
                     className="flex-1 text-xs h-8 px-2"
-                    onClick={(e) => { e.stopPropagation(); setIsInteractionModalOpen(true); }}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setIsInteractionModalOpen(true);
+                      setInteractionDate(new Date().toISOString().slice(0, 10));
+                    }}
                   >
                     <Plus className="w-3 h-3 mr-1.5" />
                     Interação
@@ -177,7 +191,17 @@ const LeadCard = ({
                         <option value="call">Ligação</option>
                         <option value="message">Mensagem</option>
                         <option value="visit">Visita</option>
+                        <option value="meeting">Reunião</option>
                       </select>
+                    </div>
+                    <div>
+                      <Label>Data da Interação</Label>
+                      <Input
+                        type="date"
+                        value={interactionDate}
+                        onChange={(e) => setInteractionDate(e.target.value)}
+                        className="w-full mt-1 p-2 border rounded-md"
+                      />
                     </div>
                     <div>
                       <Label>Descrição</Label>

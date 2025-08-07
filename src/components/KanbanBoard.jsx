@@ -68,6 +68,8 @@ const KanbanBoard = ({
             </Droppable>
           </motion.div>
         ))}
+        
+
       </div>
     </div>
   );

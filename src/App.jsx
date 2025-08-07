@@ -43,18 +43,6 @@ function App() {
   // Capturar tokens de reset imediatamente quando a página carrega
   useEffect(() => {
     const captureResetTokens = () => {
-      // Debug: log da URL completa
-      console.log('=== DEBUG RESET PASSWORD ===');
-      console.log('URL completa:', window.location.href);
-      console.log('Pathname:', window.location.pathname);
-      console.log('Search params:', window.location.search);
-      console.log('Hash:', window.location.hash);
-      console.log('Referrer:', document.referrer);
-      
-      // Log mais visível para debug
-      console.warn('🔍 DEBUG: Iniciando captura de tokens de reset');
-      console.warn('📍 URL:', window.location.href);
-      
       // Verificar tanto query parameters quanto hash fragments
       const urlParams = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -71,7 +59,6 @@ function App() {
           token_type: hashParams.get('token_type'),
           type: hashParams.get('type')
         };
-        console.log('Hash tokens capturados:', tokens);
       }
       // Se não encontrou nos hash, tentar nos query params
       else if (urlParams.has('access_token') && urlParams.has('refresh_token')) {
@@ -83,7 +70,6 @@ function App() {
           token_type: urlParams.get('token_type'),
           type: urlParams.get('type')
         };
-        console.log('Query tokens capturados:', tokens);
       }
       // Verificar se há parâmetros de recovery
       else if (urlParams.has('token') && urlParams.get('type') === 'recovery') {
@@ -91,14 +77,12 @@ function App() {
           token: urlParams.get('token'),
           type: urlParams.get('type')
         };
-        console.log('Recovery tokens capturados:', tokens);
       }
       else if (hashParams.has('token') && hashParams.get('type') === 'recovery') {
         tokens = {
           token: hashParams.get('token'),
           type: hashParams.get('type')
         };
-        console.log('Hash recovery tokens capturados:', tokens);
       }
       
       if (tokens) {
@@ -108,17 +92,15 @@ function App() {
         // Limpar a URL para evitar que o Supabase processe os tokens automaticamente
         const cleanUrl = window.location.origin + window.location.pathname;
         window.history.replaceState({}, document.title, cleanUrl);
-        console.log('URL limpa para:', cleanUrl);
         
         // Aguardar um pouco antes de processar os tokens para evitar conflitos
         setTimeout(() => {
-          console.log('Processando tokens capturados...');
+          // Processando tokens capturados
         }, 500);
       }
       
       // Verificar se estamos na página de reset mesmo sem tokens (produção)
       if (window.location.pathname === '/reset-password') {
-        console.log('Detectada página de reset-password');
         setIsResetPage(true);
       }
     };
@@ -128,7 +110,6 @@ function App() {
     
     // Listener para mudanças na URL (caso o Supabase redirecione)
     const handleUrlChange = () => {
-      console.log('URL mudou, recapturando tokens...');
       setTimeout(captureResetTokens, 100); // Pequeno delay para garantir que a URL foi atualizada
     };
     
@@ -138,7 +119,6 @@ function App() {
     // Verificar periodicamente se há tokens (para casos onde o Supabase processa automaticamente)
     const tokenCheckInterval = setInterval(() => {
       if (window.location.pathname === '/reset-password' && !resetTokens) {
-        console.log('Verificando tokens periodicamente...');
         captureResetTokens();
       }
     }, 2000); // Aumentado de 1 para 2 segundos para reduzir a frequência
@@ -349,7 +329,8 @@ function App() {
 
   const addInteraction = async (leadId, interaction) => {
     const lead = leads.find(l => l.id === leadId);
-    const updatedInteractions = [...(lead.interactions || []), { ...interaction, id: `int-${Date.now()}`, created_at: new Date().toISOString() }];
+    const interactionDate = interaction.date ? new Date(interaction.date).toISOString() : new Date().toISOString();
+    const updatedInteractions = [...(lead.interactions || []), { ...interaction, id: `int-${Date.now()}`, created_at: interactionDate }];
     
     const { data, error } = await supabase
       .from('leads')
@@ -436,7 +417,7 @@ function App() {
   return (
     <>
       <Helmet>
-        <title>Pipeline Alfa - Dashboard</title>
+        <title>Pipeline</title>
         <meta name="description" content="Gerencie seus leads e vendas com eficiência" />
       </Helmet>
       
@@ -519,6 +500,7 @@ function App() {
             setViewingLead(null);
           }}
           lead={viewingLead}
+          tasks={tasks}
           onAddInteraction={addInteraction}
           onEdit={(lead) => {
             setEditingLead(lead);
