@@ -36,31 +36,122 @@ function App() {
   });
   const { toast } = useToast();
 
+  // Estado para armazenar tokens de reset capturados
+  const [resetTokens, setResetTokens] = useState(null);
+  const [isResetPage, setIsResetPage] = useState(false);
+
+  // Capturar tokens de reset imediatamente quando a página carrega
+  useEffect(() => {
+    const captureResetTokens = () => {
+      // Debug: log da URL completa
+      console.log('=== DEBUG RESET PASSWORD ===');
+      console.log('URL completa:', window.location.href);
+      console.log('Pathname:', window.location.pathname);
+      console.log('Search params:', window.location.search);
+      console.log('Hash:', window.location.hash);
+      console.log('Referrer:', document.referrer);
+      
+      // Log mais visível para debug
+      console.warn('🔍 DEBUG: Iniciando captura de tokens de reset');
+      console.warn('📍 URL:', window.location.href);
+      
+      // Verificar tanto query parameters quanto hash fragments
+      const urlParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      
+      let tokens = null;
+      
+      // Primeiro, tentar obter dos hash fragments (mais comum para Supabase)
+      if (hashParams.has('access_token') && hashParams.has('refresh_token')) {
+        tokens = {
+          access_token: hashParams.get('access_token'),
+          refresh_token: hashParams.get('refresh_token'),
+          expires_at: hashParams.get('expires_at'),
+          expires_in: hashParams.get('expires_in'),
+          token_type: hashParams.get('token_type'),
+          type: hashParams.get('type')
+        };
+        console.log('Hash tokens capturados:', tokens);
+      }
+      // Se não encontrou nos hash, tentar nos query params
+      else if (urlParams.has('access_token') && urlParams.has('refresh_token')) {
+        tokens = {
+          access_token: urlParams.get('access_token'),
+          refresh_token: urlParams.get('refresh_token'),
+          expires_at: urlParams.get('expires_at'),
+          expires_in: urlParams.get('expires_in'),
+          token_type: urlParams.get('token_type'),
+          type: urlParams.get('type')
+        };
+        console.log('Query tokens capturados:', tokens);
+      }
+      // Verificar se há parâmetros de recovery
+      else if (urlParams.has('token') && urlParams.get('type') === 'recovery') {
+        tokens = {
+          token: urlParams.get('token'),
+          type: urlParams.get('type')
+        };
+        console.log('Recovery tokens capturados:', tokens);
+      }
+      else if (hashParams.has('token') && hashParams.get('type') === 'recovery') {
+        tokens = {
+          token: hashParams.get('token'),
+          type: hashParams.get('type')
+        };
+        console.log('Hash recovery tokens capturados:', tokens);
+      }
+      
+      if (tokens) {
+        setResetTokens(tokens);
+        setIsResetPage(true);
+        
+        // Limpar a URL para evitar que o Supabase processe os tokens automaticamente
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        console.log('URL limpa para:', cleanUrl);
+        
+        // Aguardar um pouco antes de processar os tokens para evitar conflitos
+        setTimeout(() => {
+          console.log('Processando tokens capturados...');
+        }, 500);
+      }
+      
+      // Verificar se estamos na página de reset mesmo sem tokens (produção)
+      if (window.location.pathname === '/reset-password') {
+        console.log('Detectada página de reset-password');
+        setIsResetPage(true);
+      }
+    };
+    
+    // Capturar tokens imediatamente
+    captureResetTokens();
+    
+    // Listener para mudanças na URL (caso o Supabase redirecione)
+    const handleUrlChange = () => {
+      console.log('URL mudou, recapturando tokens...');
+      setTimeout(captureResetTokens, 100); // Pequeno delay para garantir que a URL foi atualizada
+    };
+    
+    // Escutar mudanças no histórico
+    window.addEventListener('popstate', handleUrlChange);
+    
+    // Verificar periodicamente se há tokens (para casos onde o Supabase processa automaticamente)
+    const tokenCheckInterval = setInterval(() => {
+      if (window.location.pathname === '/reset-password' && !resetTokens) {
+        console.log('Verificando tokens periodicamente...');
+        captureResetTokens();
+      }
+    }, 2000); // Aumentado de 1 para 2 segundos para reduzir a frequência
+    
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      clearInterval(tokenCheckInterval);
+    };
+  }, [resetTokens]);
+
   // Verificar se estamos na página de reset de senha
   const isResetPasswordPage = () => {
-    // Debug: log da URL completa
-    console.log('URL completa:', window.location.href);
-    console.log('Search params:', window.location.search);
-    console.log('Hash:', window.location.hash);
-    
-    // Verificar tanto query parameters quanto hash fragments
-    const urlParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    
-    const hasQueryTokens = urlParams.has('access_token') && urlParams.has('refresh_token');
-    const hasHashTokens = hashParams.has('access_token') && hashParams.has('refresh_token');
-    
-    console.log('Query tokens:', hasQueryTokens);
-    console.log('Hash tokens:', hasHashTokens);
-    
-    // Verificar também se há parâmetros de recovery
-    const hasRecoveryParams = urlParams.has('token') && urlParams.get('type') === 'recovery';
-    const hasHashRecoveryParams = hashParams.has('token') && hashParams.get('type') === 'recovery';
-    
-    console.log('Recovery params:', hasRecoveryParams);
-    console.log('Hash recovery params:', hasHashRecoveryParams);
-    
-    return hasQueryTokens || hasHashTokens || hasRecoveryParams || hasHashRecoveryParams;
+    return isResetPage || window.location.pathname === '/reset-password';
   };
 
   // Verificar assinatura periodicamente
@@ -291,7 +382,7 @@ function App() {
 
   // Se estamos na página de reset de senha, renderizar o componente ResetPassword
   if (isResetPasswordPage()) {
-    return <ResetPassword />;
+    return <ResetPassword tokens={resetTokens} />;
   }
 
   if (authLoading) {

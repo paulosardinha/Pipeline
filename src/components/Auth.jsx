@@ -19,6 +19,8 @@ const Auth = () => {
   const [checkingSubscription, setCheckingSubscription] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [resetCooldown, setResetCooldown] = useState(0);
+  const [lastResetAttempt, setLastResetAttempt] = useState(null);
 
   // Verificar assinatura quando email mudar
   useEffect(() => {
@@ -47,6 +49,22 @@ const Auth = () => {
     const timeoutId = setTimeout(checkSubscription, 500);
     return () => clearTimeout(timeoutId);
   }, [email]);
+
+  // Gerenciar cooldown do reset de senha
+  useEffect(() => {
+    if (resetCooldown > 0) {
+      const timer = setInterval(() => {
+        setResetCooldown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [resetCooldown]);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -87,11 +105,27 @@ const Auth = () => {
       return;
     }
 
+    // Verificar rate limiting
+    const now = Date.now();
+    if (lastResetAttempt && (now - lastResetAttempt) < 60000) { // 1 minuto
+      const remainingTime = Math.ceil((60000 - (now - lastResetAttempt)) / 1000);
+      toast({
+        variant: "destructive",
+        title: "Aguarde um momento",
+        description: `Você pode tentar novamente em ${remainingTime} segundos.`,
+      });
+      return;
+    }
+
     setLoading(true);
+    setLastResetAttempt(now);
+    
     try {
       const { error } = await resetPassword(email);
       if (!error) {
         setResetEmailSent(true);
+        // Iniciar cooldown de 5 minutos
+        setResetCooldown(300);
       }
     } catch (error) {
       console.error('Erro ao enviar e-mail de reset:', error);
@@ -209,8 +243,29 @@ const Auth = () => {
               />
             </div>
             {renderSubscriptionStatus()}
-            <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" disabled={loading || checkingSubscription}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Enviar e-mail de redefinição'}
+            {resetCooldown > 0 && (
+              <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">Aguarde para tentar novamente</p>
+                  <p className="text-xs text-yellow-600">
+                    Para evitar spam, você pode solicitar um novo e-mail em {Math.floor(resetCooldown / 60)}:{(resetCooldown % 60).toString().padStart(2, '0')}
+                  </p>
+                </div>
+              </div>
+            )}
+            <Button 
+              type="submit" 
+              className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" 
+              disabled={loading || checkingSubscription || resetCooldown > 0}
+            >
+              {loading ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
+              ) : resetCooldown > 0 ? (
+                `Aguarde ${Math.floor(resetCooldown / 60)}:${(resetCooldown % 60).toString().padStart(2, '0')}`
+              ) : (
+                'Enviar e-mail de redefinição'
+              )}
             </Button>
           </form>
         )}

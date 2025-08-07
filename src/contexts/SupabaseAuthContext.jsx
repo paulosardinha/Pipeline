@@ -137,14 +137,23 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: 'https://pipelinealfa.com/reset-password',
     });
 
     if (error) {
+      let errorMessage = error.message || "Não foi possível enviar o e-mail de reset de senha.";
+      let errorTitle = "Erro ao enviar e-mail";
+      
+      // Tratamento específico para erro 429 (Too Many Requests)
+      if (error.message && error.message.includes('429')) {
+        errorTitle = "Muitas tentativas";
+        errorMessage = "Você fez muitas tentativas recentemente. Aguarde alguns minutos antes de tentar novamente.";
+      }
+      
       toast({
         variant: "destructive",
-        title: "Erro ao enviar e-mail",
-        description: error.message || "Não foi possível enviar o e-mail de reset de senha.",
+        title: errorTitle,
+        description: errorMessage,
       });
     } else {
       toast({

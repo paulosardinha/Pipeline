@@ -5,9 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Loader2, CheckCircle, Eye, EyeOff, XCircle } from 'lucide-react';
 
-const ResetPassword = () => {
+const ResetPassword = ({ tokens }) => {
   const { toast } = useToast();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,62 +16,152 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isValidLink, setIsValidLink] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
 
   useEffect(() => {
-    console.log('ResetPassword - URL completa:', window.location.href);
-    console.log('ResetPassword - Search params:', window.location.search);
-    console.log('ResetPassword - Hash:', window.location.hash);
+    console.log('=== RESET PASSWORD COMPONENT ===');
+    console.log('ResetPassword - Tokens recebidos:', tokens);
+    console.log('URL atual:', window.location.href);
+    console.log('Pathname:', window.location.pathname);
+    console.log('Search:', window.location.search);
+    console.log('Hash:', window.location.hash);
     
-    // Verificar se há um token de acesso na URL (tanto em query params quanto em hash fragments)
-    let accessToken, refreshToken, recoveryToken;
+    // Logs mais visíveis para debug
+    console.warn('🔄 RESET PASSWORD: Componente iniciado');
+    console.warn('🎫 Tokens:', tokens);
+    console.warn('🌐 URL completa:', window.location.href);
     
-    // Primeiro, tentar obter dos query parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    accessToken = urlParams.get('access_token');
-    refreshToken = urlParams.get('refresh_token');
-    recoveryToken = urlParams.get('token');
-    const type = urlParams.get('type');
+    setIsValidating(true);
     
-    // Se não encontrou nos query params, tentar nos hash fragments
-    if (!accessToken || !refreshToken) {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      accessToken = hashParams.get('access_token');
-      refreshToken = hashParams.get('refresh_token');
-      if (!recoveryToken) {
-        recoveryToken = hashParams.get('token');
-      }
-    }
-    
-    console.log('Tokens encontrados:', { accessToken: !!accessToken, refreshToken: !!refreshToken, recoveryToken: !!recoveryToken, type });
-    
-    // Se temos tokens de acesso diretos, usar eles
-    if (accessToken && refreshToken) {
-      const setSession = async () => {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-
-        if (error) {
-          console.error('Erro ao definir sessão:', error);
+    if (!tokens) {
+      console.log('Nenhum token recebido, verificando sessão atual do Supabase');
+      
+      // Tentar obter a sessão atual do Supabase (pode ter sido processada automaticamente)
+      const checkCurrentSession = async () => {
+        try {
+          console.log('Verificando sessão atual...');
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          console.log('Resultado da verificação de sessão:', { session, error });
+          
+          if (session && session.user) {
+            console.log('Sessão ativa encontrada:', session);
+            console.log('User:', session.user);
+            console.log('Access token:', session.access_token);
+            setIsValidLink(true);
+            setIsValidating(false);
+            return;
+          }
+          
+          console.log('Nenhuma sessão ativa encontrada');
+          
+          // Verificar se há tokens na URL que podem ter sido processados automaticamente
+          const urlParams = new URLSearchParams(window.location.search);
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          
+          // Se não há tokens na URL e nenhuma sessão ativa, verificar se é um link válido
+          if (!urlParams.has('token') && !hashParams.has('token') && 
+              !urlParams.has('access_token') && !hashParams.has('access_token')) {
+            
+            console.warn('⏳ Aguardando validação do link...');
+            
+            // Aguardar um pouco mais para dar tempo do Supabase processar automaticamente
+            setTimeout(async () => {
+              // Verificar novamente a sessão após o delay
+              const { data: { session: retrySession }, error: retryError } = await supabase.auth.getSession();
+              
+              if (retrySession && retrySession.user) {
+                console.log('Sessão encontrada após retry:', retrySession);
+                setIsValidLink(true);
+                setIsValidating(false);
+              } else {
+                console.warn('❌ Link considerado inválido após verificação completa');
+                toast({
+                  variant: "destructive",
+                  title: "Link inválido",
+                  description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
+                });
+                setIsValidating(false);
+                // Não redirecionar automaticamente, deixar o usuário clicar no botão
+              }
+            }, 3000); // Reduzido de 5 para 3 segundos
+          } else {
+            // Se há tokens na URL, aguardar um pouco mais para processamento
+            console.log('Tokens detectados na URL, aguardando processamento...');
+            setTimeout(async () => {
+              const { data: { session: retrySession } } = await supabase.auth.getSession();
+              if (retrySession && retrySession.user) {
+                console.log('Sessão processada com sucesso:', retrySession);
+                setIsValidLink(true);
+                setIsValidating(false);
+              } else {
+                console.warn('❌ Falha ao processar tokens da URL');
+                toast({
+                  variant: "destructive",
+                  title: "Link inválido",
+                  description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
+                });
+                setIsValidating(false);
+              }
+            }, 2000);
+          }
+        } catch (error) {
+          console.error('Erro ao verificar sessão:', error);
+          setIsValidating(false);
           toast({
             variant: "destructive",
             title: "Erro ao validar link",
-            description: "Este link de redefinição de senha é inválido ou expirou.",
+            description: "Ocorreu um erro ao validar o link de redefinição. Por favor, tente novamente.",
           });
-          window.location.href = '/';
-        } else {
-          setIsValidLink(true);
+        }
+      };
+      
+      checkCurrentSession();
+      return;
+    }
+    
+    // Se temos tokens de acesso diretos, usar eles
+    if (tokens.access_token && tokens.refresh_token) {
+      console.log('Processando tokens de acesso diretos');
+      const setSession = async () => {
+        try {
+          const { error } = await supabase.auth.setSession({
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+          });
+
+          if (error) {
+            console.error('Erro ao definir sessão:', error);
+            toast({
+              variant: "destructive",
+              title: "Erro ao validar link",
+              description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
+            });
+            setIsValidating(false);
+          } else {
+            console.log('Sessão definida com sucesso');
+            setIsValidLink(true);
+            setIsValidating(false);
+          }
+        } catch (error) {
+          console.error('Erro ao processar sessão:', error);
+          setIsValidating(false);
+          toast({
+            variant: "destructive",
+            title: "Erro ao validar link",
+            description: "Ocorreu um erro ao processar o link de redefinição. Por favor, tente novamente.",
+          });
         }
       };
       setSession();
     }
     // Se temos um token de recovery, verificar com o Supabase
-    else if (recoveryToken && type === 'recovery') {
+    else if (tokens.token && tokens.type === 'recovery') {
+      console.log('Processando token de recovery');
       const verifyRecovery = async () => {
         try {
           const { data, error } = await supabase.auth.verifyOtp({
-            token_hash: recoveryToken,
+            token_hash: tokens.token,
             type: 'recovery'
           });
           
@@ -80,37 +170,36 @@ const ResetPassword = () => {
             toast({
               variant: "destructive",
               title: "Link inválido",
-              description: "Este link de redefinição de senha é inválido ou expirou.",
+              description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
             });
-            window.location.href = '/';
+            setIsValidating(false);
           } else {
             console.log('Recovery token válido:', data);
             setIsValidLink(true);
+            setIsValidating(false);
           }
         } catch (error) {
           console.error('Erro na verificação:', error);
+          setIsValidating(false);
           toast({
             variant: "destructive",
             title: "Erro ao validar link",
-            description: "Ocorreu um erro ao validar o link de redefinição.",
+            description: "Ocorreu um erro ao validar o link de redefinição. Por favor, tente novamente.",
           });
-          window.location.href = '/';
         }
       };
       verifyRecovery();
     }
     else {
-      console.log('Nenhum token válido encontrado');
+      console.log('Tokens inválidos recebidos:', tokens);
+      setIsValidating(false);
       toast({
         variant: "destructive",
         title: "Link inválido",
-        description: "Este link de redefinição de senha é inválido ou expirou.",
+        description: "Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.",
       });
-      // Redirecionar para a página principal
-      window.location.href = '/';
-      return;
     }
-  }, [toast]);
+  }, [tokens, toast]);
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -169,6 +258,35 @@ const ResetPassword = () => {
     window.location.href = '/';
   };
 
+  // Tela de validação do link
+  if (isValidating) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center p-4 relative bg-auth-background bg-cover bg-center">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div className="relative z-10 w-full max-w-md">
+          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
+            <CardContent className="p-8">
+              <div className="text-center">
+                <div className="mb-6">
+                  <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Validando Link
+                </h2>
+                <p className="text-gray-600 mb-4">
+                  Aguarde enquanto validamos seu link de redefinição de senha...
+                </p>
+                <div className="text-sm text-gray-500">
+                  Este processo pode levar alguns segundos.
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (!isValidLink) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center p-4 relative bg-auth-background bg-cover bg-center">
@@ -184,14 +302,33 @@ const ResetPassword = () => {
           
           <Card className="bg-white/5 border-white/20 text-white">
             <CardHeader>
-              <CardTitle>Validando link...</CardTitle>
-              <CardDescription className="text-white/70">
-                Aguarde enquanto validamos seu link de redefinição de senha.
-              </CardDescription>
+              <div className="text-center">
+                <div className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                  <XCircle className="w-8 h-8 text-red-400" />
+                </div>
+                <CardTitle>Link Inválido</CardTitle>
+                <CardDescription className="text-white/70">
+                  Este link de redefinição de senha é inválido ou expirou. Por favor, solicite um novo link.
+                </CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-white" />
+              <div className="space-y-4">
+                <p className="text-sm text-white/70 text-center">
+                  Para solicitar um novo link de redefinição:
+                </p>
+                <ol className="text-sm text-white/60 text-left space-y-2">
+                  <li>1. Volte à página de login</li>
+                  <li>2. Clique em "Esqueci minha senha"</li>
+                  <li>3. Digite seu e-mail</li>
+                  <li>4. Verifique sua caixa de entrada</li>
+                </ol>
+                <Button
+                  onClick={handleBackToLogin}
+                  className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white"
+                >
+                  Voltar ao Login
+                </Button>
               </div>
             </CardContent>
           </Card>
