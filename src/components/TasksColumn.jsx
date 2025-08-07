@@ -7,7 +7,8 @@ import {
   Plus,
   Edit,
   Trash2,
-  MoreVertical
+  MoreVertical,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -19,6 +20,7 @@ const TasksColumn = ({
   onToggleTask, 
   onEditTask, 
   onDeleteTask, 
+  onDeleteCompletedTasks,
   onAddTask,
   onViewLead 
 }) => {
@@ -77,6 +79,18 @@ const TasksColumn = ({
       <div className="bg-purple-600 text-white p-4 rounded-t-lg flex items-center justify-between">
         <h3 className="font-semibold">Todas as Tarefas</h3>
         <div className="flex items-center gap-2">
+          {tasks.filter(task => task.completed).length > 0 && (
+            <Button
+              onClick={onDeleteCompletedTasks}
+              variant="ghost"
+              size="sm"
+              className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 h-auto"
+              title="Excluir todas as tarefas concluídas"
+            >
+              <X className="w-3 h-3 mr-1" />
+              Limpar Concluídas
+            </Button>
+          )}
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}

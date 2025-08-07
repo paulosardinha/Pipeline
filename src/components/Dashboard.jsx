@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Users, TrendingUp, Clock, CheckCircle, AlertTriangle, Calendar } from 'lucide-react';
+import { Users, TrendingUp, Clock, CheckCircle, AlertTriangle, Calendar, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 
-const Dashboard = ({ leads, tasks, onToggleTask }) => {
+const Dashboard = ({ leads, tasks, onToggleTask, onDeleteCompletedTasks }) => {
   const today = new Date().toDateString();
   
   const stats = {
@@ -161,9 +162,23 @@ const Dashboard = ({ leads, tasks, onToggleTask }) => {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.8 }} className="bg-white rounded-xl p-6 shadow-lg">
-          <div className="flex items-center gap-2 mb-4">
-            <CheckCircle className="w-5 h-5 text-purple-500" />
-            <h3 className="text-lg font-semibold text-gray-900">Todas as Tarefas</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-purple-500" />
+              <h3 className="text-lg font-semibold text-gray-900">Todas as Tarefas</h3>
+            </div>
+            {tasks.filter(task => task.completed).length > 0 && (
+              <Button
+                onClick={onDeleteCompletedTasks}
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50"
+                title="Excluir todas as tarefas concluídas"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Limpar Concluídas ({tasks.filter(task => task.completed).length})
+              </Button>
+            )}
           </div>
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {tasks.length > 0 ? (

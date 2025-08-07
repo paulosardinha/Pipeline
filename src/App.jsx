@@ -327,6 +327,32 @@ function App() {
     }
   };
 
+  const deleteCompletedTasks = async () => {
+    const completedTasks = tasks.filter(task => task.completed);
+    
+    if (completedTasks.length === 0) {
+      toast({ title: "Nenhuma tarefa concluída", description: "Não há tarefas concluídas para excluir.", variant: "destructive" });
+      return;
+    }
+
+    const completedTaskIds = completedTasks.map(task => task.id);
+    
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .in('id', completedTaskIds);
+    
+    if (error) {
+      toast({ title: "Erro ao excluir tarefas", description: error.message, variant: "destructive" });
+    } else {
+      setTasks(tasks.filter(task => !task.completed));
+      toast({ 
+        title: "Tarefas excluídas!", 
+        description: `${completedTasks.length} tarefa(s) concluída(s) foram removidas com sucesso.` 
+      });
+    }
+  };
+
   const addInteraction = async (leadId, interaction) => {
     const lead = leads.find(l => l.id === leadId);
     
@@ -445,6 +471,7 @@ function App() {
             leads={leads} 
             tasks={tasks} 
             onToggleTask={toggleTask}
+            onDeleteCompletedTasks={deleteCompletedTasks}
           />
           
           <motion.div
