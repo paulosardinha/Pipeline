@@ -35,6 +35,7 @@ const LeadCard = ({
   const [interactionText, setInteractionText] = useState('');
   const [interactionType, setInteractionType] = useState('call');
   const [interactionDate, setInteractionDate] = useState(new Date().toISOString().slice(0, 10));
+  const [interactionTime, setInteractionTime] = useState(new Date().toTimeString().slice(0, 5));
   const { toast } = useToast();
 
   const handleAddInteraction = () => {
@@ -47,14 +48,20 @@ const LeadCard = ({
       return;
     }
 
+    // Combinar data e horário escolhidos
+    const combinedDateTime = new Date(`${interactionDate}T${interactionTime}`);
+    
     onAddInteraction(lead.id, {
       type: interactionType,
       content: interactionText,
       date: interactionDate,
+      time: interactionTime,
+      created_at: combinedDateTime.toISOString()
     });
 
     setInteractionText('');
     setInteractionDate(new Date().toISOString().slice(0, 10));
+    setInteractionTime(new Date().toTimeString().slice(0, 5));
     setIsInteractionModalOpen(false);
   };
   
@@ -159,6 +166,7 @@ const LeadCard = ({
                 if (!open) {
                   setInteractionText('');
                   setInteractionDate(new Date().toISOString().slice(0, 10));
+                  setInteractionTime(new Date().toTimeString().slice(0, 5));
                 }
               }}>
                 <DialogTrigger asChild>
@@ -170,6 +178,7 @@ const LeadCard = ({
                       e.stopPropagation(); 
                       setIsInteractionModalOpen(true);
                       setInteractionDate(new Date().toISOString().slice(0, 10));
+                      setInteractionTime(new Date().toTimeString().slice(0, 5));
                     }}
                   >
                     <Plus className="w-3 h-3 mr-1.5" />
@@ -200,6 +209,15 @@ const LeadCard = ({
                         type="date"
                         value={interactionDate}
                         onChange={(e) => setInteractionDate(e.target.value)}
+                        className="w-full mt-1 p-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <Label>Horário da Interação</Label>
+                      <Input
+                        type="time"
+                        value={interactionTime}
+                        onChange={(e) => setInteractionTime(e.target.value)}
                         className="w-full mt-1 p-2 border rounded-md"
                       />
                     </div>

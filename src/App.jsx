@@ -329,8 +329,16 @@ function App() {
 
   const addInteraction = async (leadId, interaction) => {
     const lead = leads.find(l => l.id === leadId);
-    const interactionDate = interaction.date ? new Date(interaction.date).toISOString() : new Date().toISOString();
-    const updatedInteractions = [...(lead.interactions || []), { ...interaction, id: `int-${Date.now()}`, created_at: interactionDate }];
+    
+    // Usar o created_at enviado pelos componentes se disponível, senão criar baseado na data
+    const interactionDate = interaction.created_at || 
+      (interaction.date && interaction.time ? new Date(`${interaction.date}T${interaction.time}`).toISOString() : new Date().toISOString());
+    
+    const updatedInteractions = [...(lead.interactions || []), { 
+      ...interaction, 
+      id: `int-${Date.now()}`, 
+      created_at: interactionDate 
+    }];
     
     const { data, error } = await supabase
       .from('leads')
