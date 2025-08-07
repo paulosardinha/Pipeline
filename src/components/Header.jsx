@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Filter, Users, Target } from 'lucide-react';
+import { Plus, Filter, Users, Target, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const Header = ({ onAddLead = () => {}, onAddTask = () => {}, filters = { status: 'all', priority: 'all', origin: 'all' }, onFiltersChange = () => {}, leads = [] }) => {
+const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => {}, user = null, filters = { status: 'all', priority: 'all', origin: 'all' }, onFiltersChange = () => {}, leads = [] }) => {
   const totalLeads = leads?.length || 0;
   const activeLeads = leads?.filter(lead => lead.status !== 'fechado')?.length || 0;
 
@@ -101,15 +101,37 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, filters = { status
               </Select>
             </div>
 
-            <div className="flex gap-2">
-              <Button onClick={() => onAddLead && onAddLead()} className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Lead
-              </Button>
-              <Button onClick={() => onAddTask && onAddTask()} variant="outline" className="border-purple-200 hover:bg-purple-50">
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Tarefa
-              </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex gap-2">
+                <Button onClick={() => onAddLead && onAddLead()} className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Lead
+                </Button>
+                <Button onClick={() => onAddTask && onAddTask()} variant="outline" className="border-purple-200 hover:bg-purple-50">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Tarefa
+                </Button>
+              </div>
+              
+              {user && (
+                <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+                    <User className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {user.email || 'Usuário'}
+                    </span>
+                  </div>
+                  <Button 
+                    onClick={() => onSignOut && onSignOut()} 
+                    variant="outline" 
+                    size="sm"
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                    title="Sair da conta"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
