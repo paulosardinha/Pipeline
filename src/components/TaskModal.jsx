@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,6 +68,9 @@ const TaskModal = ({ isOpen, onClose, onSave, task, leads, selectedLeadId }) => 
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{task ? 'Editar Tarefa' : 'Nova Tarefa'}</DialogTitle>
+          <DialogDescription>
+            {task ? 'Edite as informações da tarefa existente.' : 'Preencha os campos para criar uma nova tarefa.'}
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">

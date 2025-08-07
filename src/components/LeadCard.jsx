@@ -10,7 +10,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -188,6 +188,9 @@ const LeadCard = ({
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Nova Interação - {lead.name}</DialogTitle>
+                    <DialogDescription>
+                      Adicione uma nova interação para este lead. Preencha os campos abaixo e clique em salvar.
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>

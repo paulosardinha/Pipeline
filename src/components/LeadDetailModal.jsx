@@ -269,6 +269,9 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [], onToggleTask, onAd
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Nova Interação - {lead.name}</DialogTitle>
+                <DialogDescription>
+                  Adicione uma nova interação para este lead. Preencha os campos abaixo e clique em salvar.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>

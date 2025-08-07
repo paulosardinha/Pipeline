@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -108,6 +108,9 @@ const LeadModal = ({ isOpen, onClose, onSave, lead }) => {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{lead ? 'Editar Lead' : 'Novo Lead'}</DialogTitle>
+          <DialogDescription>
+            {lead ? 'Edite as informações do lead existente.' : 'Preencha os campos para criar um novo lead.'}
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
