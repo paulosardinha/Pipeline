@@ -38,8 +38,29 @@ function App() {
 
   // Verificar se estamos na página de reset de senha
   const isResetPasswordPage = () => {
+    // Debug: log da URL completa
+    console.log('URL completa:', window.location.href);
+    console.log('Search params:', window.location.search);
+    console.log('Hash:', window.location.hash);
+    
+    // Verificar tanto query parameters quanto hash fragments
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.has('access_token') && urlParams.has('refresh_token');
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    const hasQueryTokens = urlParams.has('access_token') && urlParams.has('refresh_token');
+    const hasHashTokens = hashParams.has('access_token') && hashParams.has('refresh_token');
+    
+    console.log('Query tokens:', hasQueryTokens);
+    console.log('Hash tokens:', hasHashTokens);
+    
+    // Verificar também se há parâmetros de recovery
+    const hasRecoveryParams = urlParams.has('token') && urlParams.get('type') === 'recovery';
+    const hasHashRecoveryParams = hashParams.has('token') && hashParams.get('type') === 'recovery';
+    
+    console.log('Recovery params:', hasRecoveryParams);
+    console.log('Hash recovery params:', hasHashRecoveryParams);
+    
+    return hasQueryTokens || hasHashTokens || hasRecoveryParams || hasHashRecoveryParams;
   };
 
   // Verificar assinatura periodicamente

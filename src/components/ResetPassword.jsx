@@ -18,12 +18,89 @@ const ResetPassword = () => {
   const [isValidLink, setIsValidLink] = useState(false);
 
   useEffect(() => {
-    // Verificar se há um token de acesso na URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const accessToken = urlParams.get('access_token');
-    const refreshToken = urlParams.get('refresh_token');
+    console.log('ResetPassword - URL completa:', window.location.href);
+    console.log('ResetPassword - Search params:', window.location.search);
+    console.log('ResetPassword - Hash:', window.location.hash);
     
+    // Verificar se há um token de acesso na URL (tanto em query params quanto em hash fragments)
+    let accessToken, refreshToken, recoveryToken;
+    
+    // Primeiro, tentar obter dos query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    accessToken = urlParams.get('access_token');
+    refreshToken = urlParams.get('refresh_token');
+    recoveryToken = urlParams.get('token');
+    const type = urlParams.get('type');
+    
+    // Se não encontrou nos query params, tentar nos hash fragments
     if (!accessToken || !refreshToken) {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      accessToken = hashParams.get('access_token');
+      refreshToken = hashParams.get('refresh_token');
+      if (!recoveryToken) {
+        recoveryToken = hashParams.get('token');
+      }
+    }
+    
+    console.log('Tokens encontrados:', { accessToken: !!accessToken, refreshToken: !!refreshToken, recoveryToken: !!recoveryToken, type });
+    
+    // Se temos tokens de acesso diretos, usar eles
+    if (accessToken && refreshToken) {
+      const setSession = async () => {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (error) {
+          console.error('Erro ao definir sessão:', error);
+          toast({
+            variant: "destructive",
+            title: "Erro ao validar link",
+            description: "Este link de redefinição de senha é inválido ou expirou.",
+          });
+          window.location.href = '/';
+        } else {
+          setIsValidLink(true);
+        }
+      };
+      setSession();
+    }
+    // Se temos um token de recovery, verificar com o Supabase
+    else if (recoveryToken && type === 'recovery') {
+      const verifyRecovery = async () => {
+        try {
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: recoveryToken,
+            type: 'recovery'
+          });
+          
+          if (error) {
+            console.error('Erro ao verificar recovery token:', error);
+            toast({
+              variant: "destructive",
+              title: "Link inválido",
+              description: "Este link de redefinição de senha é inválido ou expirou.",
+            });
+            window.location.href = '/';
+          } else {
+            console.log('Recovery token válido:', data);
+            setIsValidLink(true);
+          }
+        } catch (error) {
+          console.error('Erro na verificação:', error);
+          toast({
+            variant: "destructive",
+            title: "Erro ao validar link",
+            description: "Ocorreu um erro ao validar o link de redefinição.",
+          });
+          window.location.href = '/';
+        }
+      };
+      verifyRecovery();
+    }
+    else {
+      console.log('Nenhum token válido encontrado');
       toast({
         variant: "destructive",
         title: "Link inválido",
@@ -33,27 +110,6 @@ const ResetPassword = () => {
       window.location.href = '/';
       return;
     }
-
-    // Definir a sessão com os tokens
-    const setSession = async () => {
-      const { error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Erro ao validar link",
-          description: "Este link de redefinição de senha é inválido ou expirou.",
-        });
-        window.location.href = '/';
-      } else {
-        setIsValidLink(true);
-      }
-    };
-
-    setSession();
   }, [toast]);
 
   const handleResetPassword = async (e) => {
@@ -285,4 +341,4 @@ const ResetPassword = () => {
   );
 };
 
-export default ResetPassword; 
+export default ResetPassword;
