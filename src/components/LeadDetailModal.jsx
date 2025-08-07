@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,19 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [], onToggleTask, onAd
   const [interactionText, setInteractionText] = useState('');
   const [interactionType, setInteractionType] = useState('call');
   const [interactionDate, setInteractionDate] = useState(new Date().toISOString().slice(0, 10));
+  const [interactionTime, setInteractionTime] = useState(new Date().toTimeString().slice(0, 5));
+  const [localInteractions, setLocalInteractions] = useState([]);
+
+  // Atualizar interações locais quando o lead mudar
+  useEffect(() => {
+    if (lead && lead.interactions) {
+      setLocalInteractions([...lead.interactions].sort((a, b) => {
+        const dateA = a.created_at || a.createdAt || new Date();
+        const dateB = b.created_at || b.createdAt || new Date();
+        return new Date(dateB) - new Date(dateA);
+      }));
+    }
+  }, [lead]);
 
   const handleAddInteraction = () => {
     if (!interactionText.trim()) {
@@ -21,21 +34,39 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [], onToggleTask, onAd
       return;
     }
 
+    // Combinar data e horário escolhidos
+    const combinedDateTime = new Date(`${interactionDate}T${interactionTime}`);
+    
+    const newInteraction = {
+      id: `int-${Date.now()}`,
+      type: interactionType,
+      content: interactionText,
+      date: interactionDate,
+      time: interactionTime,
+      created_at: combinedDateTime.toISOString()
+    };
+
+    // Adicionar à lista local imediatamente
+    setLocalInteractions(prev => [newInteraction, ...prev]);
+
     onAddInteraction(lead.id, {
       type: interactionType,
       content: interactionText,
       date: interactionDate,
+      time: interactionTime,
     });
 
     setInteractionText('');
     setInteractionDate(new Date().toISOString().slice(0, 10));
+    setInteractionTime(new Date().toTimeString().slice(0, 5));
     setIsInteractionModalOpen(false);
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Data não disponível';
     try {
-      return new Date(dateString).toLocaleDateString('pt-BR', {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -86,11 +117,6 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [], onToggleTask, onAd
   if (!lead) return null;
 
   const openTasks = (tasks || []).filter(task => !task.completed);
-  const sortedInteractions = [...(lead.interactions || [])].sort((a, b) => {
-    const dateA = a.created_at || a.createdAt || new Date();
-    const dateB = b.created_at || b.createdAt || new Date();
-    return new Date(dateB) - new Date(dateA);
-  });
 
   const DetailItem = ({ icon, label, value, isBlock = false }) => (
     <div className={`flex items-start gap-3 ${isBlock ? 'flex-col items-start' : ''}`}>
@@ -187,14 +213,14 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [], onToggleTask, onAd
               <div>
                 <h3 className="text-lg font-semibold mb-3">Histórico de Interações</h3>
                 <div className="space-y-4">
-                  {sortedInteractions.length > 0 ? sortedInteractions.map(interaction => (
+                  {localInteractions.length > 0 ? localInteractions.map(interaction => (
                     <div key={interaction.id} className="flex gap-3">
                       <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                         <InteractionIcon type={interaction.type} />
                       </div>
                       <div>
                         <p className="text-sm text-gray-800">{interaction.content}</p>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(interaction.created_at || interaction.createdAt || new Date())}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(interaction.created_at || interaction.date)}</p>
                       </div>
                     </div>
                   )) : (
@@ -222,6 +248,7 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [], onToggleTask, onAd
             if (!open) {
               setInteractionText('');
               setInteractionDate(new Date().toISOString().slice(0, 10));
+              setInteractionTime(new Date().toTimeString().slice(0, 5));
             }
           }}>
             <DialogTrigger asChild>
@@ -232,6 +259,7 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [], onToggleTask, onAd
                 onClick={() => {
                   setIsInteractionModalOpen(true);
                   setInteractionDate(new Date().toISOString().slice(0, 10));
+                  setInteractionTime(new Date().toTimeString().slice(0, 5));
                 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -262,6 +290,15 @@ const LeadDetailModal = ({ isOpen, onClose, lead, tasks = [], onToggleTask, onAd
                     type="date"
                     value={interactionDate}
                     onChange={(e) => setInteractionDate(e.target.value)}
+                    className="w-full mt-1 p-2 border rounded-md"
+                  />
+                </div>
+                <div>
+                  <Label>Horário da Interação</Label>
+                  <Input
+                    type="time"
+                    value={interactionTime}
+                    onChange={(e) => setInteractionTime(e.target.value)}
                     className="w-full mt-1 p-2 border rounded-md"
                   />
                 </div>
