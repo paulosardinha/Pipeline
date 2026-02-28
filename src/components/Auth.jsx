@@ -12,7 +12,7 @@ import ForgotPasswordCard from './ForgotPasswordCard';
 
 const Auth = () => {
 
-  
+
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
@@ -21,13 +21,13 @@ const Auth = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [checkingSubscription, setCheckingSubscription] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  
+
 
 
   // Verificar assinatura quando email mudar
   const checkSubscription = useCallback(async (emailToCheck) => {
 
-    
+
     if (!emailToCheck || emailToCheck.length < 5) {
 
       setSubscriptionStatus(null);
@@ -160,12 +160,12 @@ const Auth = () => {
         <div className="relative z-10 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="mb-4 inline-block">
-              <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="https://storage.googleapis.com/hostinger-horizons-assets-prod/d08cb82d-6f38-407f-afdd-2a89111d2bfa/e18ece8ef0a2cbe854d609b168a6f95c.png" />
+              <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="/logo.svg" />
             </div>
             <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline Alfa</h1>
             <p className="text-brand-accent mt-2">A ferramenta definitiva para corretores de sucesso.</p>
           </div>
-          <ForgotPasswordCard 
+          <ForgotPasswordCard
             initialEmail={email}
             onBack={() => setShowForgotPassword(false)}
           />
@@ -181,7 +181,7 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="mb-4 inline-block">
-            <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="https://storage.googleapis.com/hostinger-horizons-assets-prod/d08cb82d-6f38-407f-afdd-2a89111d2bfa/e18ece8ef0a2cbe854d609b168a6f95c.png" />
+            <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="/logo.svg" />
           </div>
           <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline Alfa</h1>
           <p className="text-brand-accent mt-2">A ferramenta definitiva para corretores de sucesso.</p>
@@ -202,29 +202,29 @@ const Auth = () => {
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">E-mail</Label>
-                    <Input 
-                      id="signin-email" 
-                      type="email" 
-                      placeholder="seu@email.com" 
-                      value={email} 
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
                       onChange={(e) => {
                         const newEmail = e.target.value;
                         setEmail(newEmail);
-                      }} 
-                      required 
-                      className="bg-white/10 border-white/20 placeholder:text-white/50" 
+                      }}
+                      required
+                      className="bg-white/10 border-white/20 placeholder:text-white/50"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Senha</Label>
-                    <Input 
-                      id="signin-password" 
-                      type="password" 
-                      placeholder="Sua senha" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      required 
-                      className="bg-white/10 border-white/20 placeholder:text-white/50" 
+                    <Input
+                      id="signin-password"
+                      type="password"
+                      placeholder="Sua senha"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="bg-white/10 border-white/20 placeholder:text-white/50"
                     />
                   </div>
                   {renderSubscriptionStatus()}
@@ -255,29 +255,29 @@ const Auth = () => {
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">E-mail</Label>
-                    <Input 
-                      id="signup-email" 
-                      type="email" 
-                      placeholder="seu@email.com" 
-                      value={email} 
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
                       onChange={(e) => {
                         const newEmail = e.target.value;
                         setEmail(newEmail);
-                      }} 
-                      required 
-                      className="bg-white/10 border-white/20 placeholder:text-white/50" 
+                      }}
+                      required
+                      className="bg-white/10 border-white/20 placeholder:text-white/50"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Senha</Label>
-                    <Input 
-                      id="signup-password" 
-                      type="password" 
-                      placeholder="Crie uma senha forte" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      required 
-                      className="bg-white/10 border-white/20 placeholder:text-white/50" 
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="Crie uma senha forte"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="bg-white/10 border-white/20 placeholder:text-white/50"
                     />
                   </div>
                   {renderSubscriptionStatus()}

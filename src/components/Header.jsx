@@ -4,12 +4,12 @@ import { Plus, Filter, Users, Target, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => {}, user = null, filters = { status: 'all', priority: 'all', origin: 'all' }, onFiltersChange = () => {}, leads = [] }) => {
+const Header = ({ onAddLead = () => { }, onAddTask = () => { }, onSignOut = () => { }, user = null, filters = { status: 'all', priority: 'all', origin: 'all' }, onFiltersChange = () => { }, leads = [] }) => {
   const totalLeads = leads?.length || 0;
   const activeLeads = leads?.filter(lead => lead.status !== 'fechado')?.length || 0;
 
   return (
-    <motion.header 
+    <motion.header
       className="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-50"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -19,7 +19,7 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => 
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <img src="https://storage.googleapis.com/hostinger-horizons-assets-prod/d08cb82d-6f38-407f-afdd-2a89111d2bfa/c246e8144972abfce16497aa89362737.png" alt="Pipeline Alfa Logo" className="w-12 h-12 rounded-lg" />
+              <img src="/logo.svg" alt="Pipeline Alfa Logo" className="w-12 h-12 rounded-lg" />
               <div>
                 <h1 className="text-2xl font-bold text-green-600">
                   Pipeline Alfa
@@ -27,7 +27,7 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => 
                 <p className="text-sm text-gray-600">Sistema de Vendas para Corretores</p>
               </div>
             </div>
-            
+
             <div className="hidden md:flex items-center gap-4 ml-8">
               <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
                 <Users className="w-4 h-4 text-blue-600" />
@@ -46,11 +46,11 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => 
                 <Filter className="w-4 h-4 text-gray-500" />
                 <span className="text-sm font-medium text-gray-700">Filtros:</span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Select value={filters?.status || 'all'} onValueChange={(value) => {
                   if (onFiltersChange) {
-                    onFiltersChange({...(filters || {}), status: value});
+                    onFiltersChange({ ...(filters || {}), status: value });
                   }
                 }}>
                   <SelectTrigger className="w-[120px] h-9">
@@ -68,7 +68,7 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => 
 
                 <Select value={filters?.priority || 'all'} onValueChange={(value) => {
                   if (onFiltersChange) {
-                    onFiltersChange({...(filters || {}), priority: value});
+                    onFiltersChange({ ...(filters || {}), priority: value });
                   }
                 }}>
                   <SelectTrigger className="w-[120px] h-9">
@@ -84,7 +84,7 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => 
 
                 <Select value={filters?.origin || 'all'} onValueChange={(value) => {
                   if (onFiltersChange) {
-                    onFiltersChange({...(filters || {}), origin: value});
+                    onFiltersChange({ ...(filters || {}), origin: value });
                   }
                 }}>
                   <SelectTrigger className="w-[120px] h-9">
@@ -114,7 +114,7 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => 
                   Nova Tarefa
                 </Button>
               </div>
-              
+
               {user && (
                 <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
                   <div className="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded-lg">
@@ -123,9 +123,9 @@ const Header = ({ onAddLead = () => {}, onAddTask = () => {}, onSignOut = () => 
                       {user.email || 'Usuário'}
                     </span>
                   </div>
-                  <Button 
-                    onClick={() => onSignOut && onSignOut()} 
-                    variant="outline" 
+                  <Button
+                    onClick={() => onSignOut && onSignOut()}
+                    variant="outline"
                     size="sm"
                     className="text-red-600 border-red-200 hover:bg-red-50"
                     title="Sair da conta"

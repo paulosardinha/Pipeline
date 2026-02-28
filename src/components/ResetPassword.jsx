@@ -20,32 +20,32 @@ const ResetPassword = ({ tokens }) => {
 
   useEffect(() => {
     setIsValidating(true);
-    
+
     if (!tokens) {
       // Tentar obter a sessão atual do Supabase (pode ter sido processada automaticamente)
       const checkCurrentSession = async () => {
         try {
           const { data: { session }, error } = await supabase.auth.getSession();
-          
+
           if (session && session.user) {
             setIsValidLink(true);
             setIsValidating(false);
             return;
           }
-          
+
           // Verificar se há tokens na URL que podem ter sido processados automaticamente
           const urlParams = new URLSearchParams(window.location.search);
           const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          
+
           // Se não há tokens na URL e nenhuma sessão ativa, verificar se é um link válido
-          if (!urlParams.has('token') && !hashParams.has('token') && 
-              !urlParams.has('access_token') && !hashParams.has('access_token')) {
-            
+          if (!urlParams.has('token') && !hashParams.has('token') &&
+            !urlParams.has('access_token') && !hashParams.has('access_token')) {
+
             // Aguardar um pouco mais para dar tempo do Supabase processar automaticamente
             setTimeout(async () => {
               // Verificar novamente a sessão após o delay
               const { data: { session: retrySession }, error: retryError } = await supabase.auth.getSession();
-              
+
               if (retrySession && retrySession.user) {
                 setIsValidLink(true);
                 setIsValidating(false);
@@ -85,7 +85,7 @@ const ResetPassword = ({ tokens }) => {
           });
         }
       };
-      
+
       checkCurrentSession();
     } else {
       // Se temos tokens de acesso diretos, usar eles
@@ -127,7 +127,7 @@ const ResetPassword = ({ tokens }) => {
               token_hash: tokens.token,
               type: 'recovery'
             });
-            
+
             if (error) {
               toast({
                 variant: "destructive",
@@ -254,12 +254,12 @@ const ResetPassword = ({ tokens }) => {
         <div className="relative z-10 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="mb-4 inline-block">
-              <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="https://storage.googleapis.com/hostinger-horizons-assets-prod/d08cb82d-6f38-407f-afdd-2a89111d2bfa/e18ece8ef0a2cbe854d609b168a6f95c.png" />
+              <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="/logo.svg" />
             </div>
             <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline Alfa</h1>
             <p className="text-brand-accent mt-2">A ferramenta definitiva para corretores de sucesso.</p>
           </div>
-          
+
           <Card className="bg-white/5 border-white/20 text-white">
             <CardHeader>
               <div className="text-center">
@@ -305,12 +305,12 @@ const ResetPassword = ({ tokens }) => {
         <div className="relative z-10 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="mb-4 inline-block">
-              <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="https://storage.googleapis.com/hostinger-horizons-assets-prod/d08cb82d-6f38-407f-afdd-2a89111d2bfa/e18ece8ef0a2cbe854d609b168a6f95c.png" />
+              <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="/logo.svg" />
             </div>
             <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline Alfa</h1>
             <p className="text-brand-accent mt-2">A ferramenta definitiva para corretores de sucesso.</p>
           </div>
-          
+
           <Card className="bg-white/5 border-white/20 text-white">
             <CardHeader>
               <div className="text-center">
@@ -344,12 +344,12 @@ const ResetPassword = ({ tokens }) => {
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="mb-4 inline-block">
-            <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="https://storage.googleapis.com/hostinger-horizons-assets-prod/d08cb82d-6f38-407f-afdd-2a89111d2bfa/e18ece8ef0a2cbe854d609b168a6f95c.png" />
+            <img alt="Pipeline Alfa Logo" className="h-24 w-24 rounded-2xl ring-8 ring-white/10" src="/logo.svg" />
           </div>
           <h1 className="text-4xl font-bold text-white tracking-tight">Pipeline Alfa</h1>
           <p className="text-brand-accent mt-2">A ferramenta definitiva para corretores de sucesso.</p>
         </div>
-        
+
         <Card className="bg-white/5 border-white/20 text-white">
           <CardHeader>
             <CardTitle>Redefinir senha</CardTitle>
@@ -362,14 +362,14 @@ const ResetPassword = ({ tokens }) => {
               <div className="space-y-2">
                 <Label htmlFor="new-password">Nova senha</Label>
                 <div className="relative">
-                  <Input 
-                    id="new-password" 
+                  <Input
+                    id="new-password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Digite sua nova senha" 
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
-                    required 
-                    className="bg-white/10 border-white/20 placeholder:text-white/50 pr-10" 
+                    placeholder="Digite sua nova senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-white/10 border-white/20 placeholder:text-white/50 pr-10"
                   />
                   <Button
                     type="button"
@@ -386,18 +386,18 @@ const ResetPassword = ({ tokens }) => {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirmar nova senha</Label>
                 <div className="relative">
-                  <Input 
-                    id="confirm-password" 
+                  <Input
+                    id="confirm-password"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirme sua nova senha" 
-                    value={confirmPassword} 
-                    onChange={(e) => setConfirmPassword(e.target.value)} 
-                    required 
-                    className="bg-white/10 border-white/20 placeholder:text-white/50 pr-10" 
+                    placeholder="Confirme sua nova senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="bg-white/10 border-white/20 placeholder:text-white/50 pr-10"
                   />
                   <Button
                     type="button"
@@ -418,7 +418,7 @@ const ResetPassword = ({ tokens }) => {
               <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white" disabled={loading}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Redefinir senha'}
               </Button>
-              
+
               <div className="text-center">
                 <Button
                   type="button"
